@@ -1,11 +1,15 @@
 <script setup>
 import Grid from './grid'
+import { computed } from 'vue'
 
 const props = defineProps({
   name: {
     type: String
   },
   title: {
+    type: String
+  },
+  class: {
     type: String
   },
   rootUrl: {
@@ -24,6 +28,46 @@ const props = defineProps({
   }
 })
 
+// computed
+const totalRows = computed(() => grid.pager.value.total)
+const pageStart = computed(() => grid.pager.value.index)
+const selectedPage = computed(() => pages.value.find(p => p.selected))
+const firstPage = computed(() => pages.value[0])
+const lastPage = computed(() => pages.value.slice(-1)[0])
+const firstVisiblePage = computed(() => visiblePages.value[0])
+const lastVisiblePage = computed(() => visiblePages.value.slice(-1)[0])
+
+const pageEnd = computed(() => {
+  const { index, pageSize, total } = grid.pager.value
+  const end = index + pageSize
+
+  return end <= total ? end : total
+})
+
+const pages = computed(() => {
+  return grid.pager.value.pages
+})
+
+const visiblePages = computed(() => {
+  if (pages.value.length <= 7) { return pages.value }
+
+  const results = []
+  const { pageNumber } = selectedPage.value
+
+  const startIndex = pageNumber < 4
+    ? 0
+    : pageNumber > pages.value.length - 7
+      ? pages.value.length - 7
+      : pageNumber - 4
+
+  for (let i = startIndex, endIndex = startIndex + 6; i <= endIndex; i++) {
+    results.push(pages.value[i])
+  }
+
+  return results
+})
+
+// object instantiation
 const grid = new Grid(
   props.rootUrl,
   props.columns,
@@ -36,44 +80,54 @@ const formatTitle = (title, value) =>
   (title !== null && title !== undefined)
     ? title
     : value[0].toUpperCase() + value.slice(1)
-const applyCustomFormatting = (field, row, formatter) => {
-  return formatter ? formatter(row[field], row) : row[field]
+
+const applyCustomFormatting = (field, row, formatter) =>
+  formatter ? formatter(row[field], row) : row[field]
+
+// functions
+const gotoPageByPageNumber = (pageNumber) => {
+  const page = pageNumber < 1
+    ? pages.value[0]
+    : pageNumber > pages.value.length
+      ? pages.value.slice(-1)[0]
+      : pages.value.find(p => p.pageNumber === Number(pageNumber))
+
+  grid.gotoPage(page)
 }
 
-const getPages = (pager) => {
-  const pages = []
-  let pageStart = 0
-  let pageNumber = 0
-
-  while ((pageStart + pager.pageSize) < pager.total && pages.length < 6) {
-    pageNumber++
-    pageStart += pager.pageSize
-
-    // console.log(`${pageNumber} + ${pager.pageSize} < ${pager.total}`)
-    pages.push({
-      pageNumber,
-      pageStart
-    })
+const search = (searchValue) => {
+  if (!searchValue || !isNaN(searchValue) || searchValue.length >= 3) {
+    grid.filterData(searchValue)
   }
-
-  return pages
 }
 
-// created
+// load data on created
 grid.getData()
 </script>
 
 <template>
-  <div @grid-created="grid.getData">
+  <div :class="props.class">
     <table :id="props.name" class="grid">
       <thead>
-        <tr v-if="props.title">
-          <td :colspan="grid.columns.value.length">
-            <div class="grid-title">
-              <span>{{ props.title }}</span>
+        <tr v-if="props.title || props.columns.some(c => c.filterable)">
+          <td :colspan="grid.columns.value.length" class="title-container">
+            <div>
+              <div class="title">
+                <span>{{ props.title }}</span>
+              </div>
+
+              <div class="search">
+                <input type="text" ref="txtSearch" @keypress.enter="search(this.$refs.txtSearch.value)" />
+                <button @click="search(this.$refs.txtSearch.value)">Search</button>
+                <span class="link" @click="() => {
+                  this.$refs.txtSearch.value = null
+                  search()
+                }">Clear</span>
+              </div>
             </div>
           </td>
         </tr>
+
         <tr>
           <th v-for="column in grid.columns.value" :key="column.index" @click="grid.sort(column)">
             {{ formatTitle(column.title, column.field) }}
@@ -82,6 +136,7 @@ grid.getData()
           </th>
         </tr>
       </thead>
+
       <tbody>
         <tr v-for="row in grid.data.value" :key="row.id">
           <td v-for="{field, formatter} in grid.columns.value" :key="field">
@@ -89,30 +144,58 @@ grid.getData()
           </td>
         </tr>
       </tbody>
+
       <tfoot>
-        <tr>
+        <tr v-if="selectedPage">
           <td :colspan="grid.columns.value.length">
             <div class="pager">
               <div>
-                Showing: {{ grid.pager.value.index }} to
-                {{ grid.pager.value.index + grid.pager.value.pageSize }} of
-                {{ grid.pager.value.total }}
+                Showing: {{ pageStart }} to {{ pageEnd }} of {{ totalRows }}
               </div>
+
               <div>
-                <span class="pageNumber arrow">
-                  <a href="#">&#x2190;</a>
+                <span v-if="selectedPage.pageNumber > 1"
+                  class="page-number arrow"
+                  @click="grid.previousPage()">
+                  &#x2190;
                 </span>
-                <span v-for="{ pageNumber } in getPages(grid.pager.value)" :key="pageNumber" class="pageNumber">
-                  <a href="#">{{ pageNumber }}</a>
+
+                <span v-if="firstVisiblePage.pageNumber > 1"
+                  :class="['page-number']"
+                  @click="grid.gotoPage(firstPage)">
+                  {{ firstPage.pageNumber }}
                 </span>
-                <span class="pageNumber arrow">
-                  <a href="#">&#x2192;</a>
+                <span v-if="firstVisiblePage.pageNumber > 2">
+                  ...
+                </span>
+
+                <span v-for="page in visiblePages" :key="page.pageNumber"
+                  :class="['page-number', page.selected ? 'active' : '']"
+                  @click="grid.gotoPage(page)">
+                  {{ page.pageNumber }}
+                </span>
+
+                <span v-if="lastVisiblePage.pageNumber < pages.length - 1">
+                  ...
+                </span>
+                <span v-if="lastVisiblePage.pageNumber < pages.length"
+                  :class="['page-number']"
+                  @click="grid.gotoPage(lastPage)">
+                  {{ lastPage.pageNumber }}
+                </span>
+
+                <span v-if="selectedPage.pageNumber < lastPage.pageNumber"
+                  class="page-number arrow"
+                  @click="grid.nextPage()">
+                  &#x2192;
                 </span>
               </div>
+
               <div>
                 Page:
-                <input type="text" :value="grid.pager.value.index" />
-                <a href="#">Go</a>
+                <input ref="txtPageNumber" type="text" :value="selectedPage.pageNumber"
+                  @keyup.enter="gotoPageByPageNumber(this.$refs.txtPageNumber.value)" />
+                <span class="link" @click="gotoPageByPageNumber(this.$refs.txtPageNumber.value)">Go</span>
               </div>
             </div>
           </td>
@@ -123,8 +206,13 @@ grid.getData()
 </template>
 
 <style lang="scss" scoped>
-  table {
+  .link:hover {
+    cursor: pointer;
+  }
+  table.grid {
     border-collapse: collapse;
+    width: 100%;
+    height: 100%;
     td, th {
       border: 1px #ddd solid;
       padding: 0.5rem 1rem;
@@ -144,51 +232,60 @@ grid.getData()
       }
     }
   }
-  .grid-title {
-    font-size: 2rem;
-    font-weight: bold;
-    justify-content: center;
-    display:flex;
+
+  .title-container {
+    background-color: #eee;
+    >div {
+      display: flex;
+      justify-content: space-between;
+      align-content: center;
+      .title {
+        font-size: 2rem;
+        font-weight: bold;
+      }
+    }
   }
+
   .pager {
-    border: thin ridge;
     display: flex;
     justify-content: center;
     background-color: #eee;
-    a, a:visited {
-      color: #333
-    }
-  }
-  .pager>div {
-    display: flex;
-    width: 33%;
-    margin:0.2rem 1rem;
-    justify-content: center;
-    line-height: 2rem;
-  }
-  .pager>div:first-child {
-    justify-content: start;
-  }
-  .pager>div:last-child {
-    justify-content: end;
-    input {
+    .page-number {
+      border:1px solid transparent;
       width: 2rem;
-      text-align: center;
-      margin: 0 0.5rem;
+      height: 2rem;
+      font-weight: 600;
+      cursor: pointer;
     }
-  }
-  span.pageNumber {
-    border:thin ridge;
-    width: 2rem;
-    height: 2rem;
-    line-height: 2rem;
-  }
-  span.pageNumber:hover {
-    background-color: #ddd;
-  }
-
-  span.arrow {
-    font-size: x-large;
-    line-height: 1.8rem;
+    .active {
+      background-color: #aaa;
+      color: #fff
+    }
+    .page-number:hover {
+      background-color: #ddd;
+    }
+    .arrow {
+      font-size: x-large;
+      line-height: 1.8rem;
+    }
+    >div {
+      display: flex;
+      width: 33%;
+      margin:0.2rem 1rem;
+      justify-content: center;
+      align-items: center;
+      line-height: 2rem;
+    }
+    >div:first-child {
+      justify-content: start;
+    }
+    >div:last-child {
+      justify-content: end;
+      input {
+        width: 2rem;
+        text-align: center;
+        margin: 0 0.5rem;
+      }
+    }
   }
 </style>
