@@ -4,32 +4,23 @@ import VueGrid from './components/VueGrid.vue'
 
 <template>
   <VueGrid
-    rootUrl="http://localhost:5174/api/parts"
-    :parseResponse="(response) => {
-      const records = []
-      Object.keys(response).forEach(key => {
-        records.push(...response[key].map(v => v))
-      })
-
+    name="TestGrid"
+    title="Dimension Values by Country"
+    rootUrl="http://localhost:5174/api/Dimension/country/DimensionValues"
+    :columns="[
+      { field: 'Code' },
+      { field: 'Title' },
+      { field: 'ParentDimension', title: 'Parent Dimension' },
+      { field: 'Dimension' },
+      { field: 'ParentCode', title: 'Parent Code' },
+      { field: 'ParentTitle', title: 'Parent Title' }
+    ]"
+    :mapResponse="(response) => {
       return {
-        data: records,
-        count: records.length
+        data: response.value,
+        total: response['@odata.count']
       }
     }"
-    :columns="[
-      {
-        field: 'id',
-        formatter: (value, row) => `${row.type[0].toUpperCase()}${row.type.slice(1,-1)}_${value}`
-      },
-      { field: 'description' },
-      { field: 'title' },
-      { field: 'src', label:'Source' },
-      { field: 'type' },
-      {
-        field: 'cost',
-        formatter: (value) => `$${value.toFixed(2)}`
-      }
-    ]"
   />
 </template>
 
