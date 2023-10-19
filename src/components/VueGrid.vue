@@ -76,28 +76,32 @@ const grid = new Grid(
 )
 
 // formatters
-const formatTitle = (title, value) =>
-  (title !== null && title !== undefined)
-    ? title
-    : value[0].toUpperCase() + value.slice(1)
+const formatTitle = (title, value) => {
+  if (title !== null && title !== undefined) {
+    return title
+  } else {
+    const s = value.replace(/([A-Z])/g, ' $1')
+    return s[0].toUpperCase() + s.slice(1)
+  }
+}
 
 const applyCustomFormatting = (field, row, formatter) =>
   formatter ? formatter(row[field], row) : row[field]
 
 // functions
-const gotoPageByPageNumber = (pageNumber) => {
+const gotoPageByPageNumber = async (pageNumber) => {
   const page = pageNumber < 1
     ? pages.value[0]
     : pageNumber > pages.value.length
       ? pages.value.slice(-1)[0]
       : pages.value.find(p => p.pageNumber === Number(pageNumber))
 
-  grid.gotoPage(page)
+  await grid.gotoPage(page)
 }
 
-const search = (searchValue) => {
+const search = async (searchValue) => {
   if (!searchValue || !isNaN(searchValue) || searchValue.length >= 3) {
-    grid.filterData(searchValue)
+    await grid.filterData(searchValue)
   }
 }
 
@@ -109,6 +113,7 @@ grid.getData()
   <div :class="props.class">
     <table :id="props.name" class="grid">
       <thead>
+        <!-- Title / Filter -->
         <tr v-if="props.title || props.columns.some(c => c.filterable)">
           <td :colspan="grid.columns.value.length" class="title-container">
             <div>
@@ -128,8 +133,11 @@ grid.getData()
           </td>
         </tr>
 
+        <!-- Column headers -->
         <tr>
-          <th v-for="column in grid.columns.value" :key="column.index" @click="grid.sort(column)">
+          <th v-for="column in grid.columns.value" :key="column.index"
+            @click="grid.sort(column)"
+            :class="column.hidden ? 'hidden' : ''">
             {{ formatTitle(column.title, column.field) }}
             <span v-if="column.sortDirection === 'ASC'">&#x2191;</span>
             <span v-else-if="column.sortDirection === 'DESC'">&#x2193;</span>
@@ -137,14 +145,24 @@ grid.getData()
         </tr>
       </thead>
 
-      <tbody>
+      <!-- Loading -->
+      <tbody v-if="grid.loading.value">
+        <tr>
+          <td :colspan="grid.columns.value.length" class="loading">&nbsp;</td>
+        </tr>
+      </tbody>
+
+      <!-- Table data -->
+      <tbody v-if="!grid.loading.value">
         <tr v-for="row in grid.data.value" :key="row.id">
-          <td v-for="{field, formatter} in grid.columns.value" :key="field">
-            {{ applyCustomFormatting(field, row, formatter) }}
+          <td v-for="column in grid.columns.value" :key="column.field"
+            :class="column.hidden ? 'hidden' : ''">
+            {{ applyCustomFormatting(column.field, row, column.format) }}
           </td>
         </tr>
       </tbody>
 
+      <!-- Pager -->
       <tfoot>
         <tr v-if="selectedPage">
           <td :colspan="grid.columns.value.length">
@@ -208,6 +226,13 @@ grid.getData()
 <style lang="scss" scoped>
   .link:hover {
     cursor: pointer;
+  }
+  .hidden {
+    display: none;
+  }
+  .loading {
+    background: url('./assets/loading.gif') no-repeat;
+    background-size: 100%;
   }
   table.grid {
     border-collapse: collapse;

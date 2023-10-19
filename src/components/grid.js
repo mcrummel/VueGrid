@@ -13,7 +13,7 @@ class Grid {
     const _columnTemplate = {
       field: '',
       title: null,
-      formatter: (value) => value,
+      format: (value) => value,
       sortDirection: null,
       dataType: String,
       filterable: false
@@ -21,6 +21,7 @@ class Grid {
 
     // properties
     this.namespaced = true
+    this.loading = ref([])
     this.columns = ref([])
     this.data = ref([])
     this.sorter = {}
@@ -38,15 +39,15 @@ class Grid {
   }
 
   // public methods
-  sortRecords = (records, sort) => {
+  sortRecords = async (records, sort) => {
     const compare = sort.direction === 'ASC'
       ? (a, b) => a[sort.field] > b[sort.field] ? 1 : a[sort.field] < b[sort.field] ? -1 : 0
       : (a, b) => a[sort.field] < b[sort.field] ? 1 : a[sort.field] > b[sort.field] ? -1 : 0
 
-    return records.sort(compare)
+    await records.sort(compare)
   }
 
-  sort = (column) => {
+  sort = async (column) => {
     const { sortDirection } = column
     column.sortDirection =
         sortDirection === 'ASC'
@@ -60,7 +61,7 @@ class Grid {
         }
       : {}
 
-    this.getData()
+    await this.getData()
   }
 
   clearSorts = () => this.columns.value.forEach(c => {
@@ -69,30 +70,23 @@ class Grid {
 
   filterData = async (searchValue) => {
     this._filter = []
+    this.pager.value.index = 0
 
     if (searchValue === undefined || searchValue === null) {
       return await this.getData()
     }
 
-    console.log(searchValue)
+    for (const { filterable, dataType, field } of this.columns.value) {
+      if (!filterable) continue
 
-    for (const column of this.columns.value) {
-      if (!column.filterable) continue
-
-      switch (column.dataType) {
+      switch (dataType) {
         case String:
-          this._filter.push({
-            field: column.field,
-            operator: 'contains',
-            value: searchValue
-          })
+          this._filter.push(`contains(${field}, '${searchValue}')`)
           break
         case Number:
-          this._filter.push({
-            field: column.field,
-            operator: 'eq',
-            value: searchValue
-          })
+          if (!isNaN(searchValue)) {
+            this._filter.push(`${field} eq ${searchValue}`)
+          }
           break
         default:
           break
@@ -103,7 +97,8 @@ class Grid {
   }
 
   getData = async () => {
-    await fetch(this._getUrl(this._rootUrl, this._filter, this.pager.value, this.sorter), {
+    this.loading.value = true
+    await fetch(this._buildUrl(this._rootUrl, this._filter, this.pager.value, this.sorter), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -113,9 +108,12 @@ class Grid {
       .then((response) => response.json())
       .then(response => this._loadData(response))
       .catch(console.log)
+      .finally(() => {
+        this.loading.value = false
+      })
   }
 
-  gotoPage = (page) => {
+  gotoPage = async (page) => {
     const { pageSize, total } = this.pager.value
 
     this.pager.value.index =
@@ -125,28 +123,29 @@ class Grid {
           ? total - pageSize
           : page.start
 
-    this.getData()
+    await this.getData()
   }
 
-  nextPage = () => {
+  nextPage = async () => {
     const { pageSize, index } = this.pager.value
 
-    this.gotoPage({
+    await this.gotoPage({
       start: index + pageSize
     })
   }
 
-  previousPage = () => {
+  previousPage = async () => {
     const { pageSize, index } = this.pager.value
 
-    this.gotoPage({
+    await this.gotoPage({
       start: index - pageSize
     })
   }
 
-  _getUrl = (root, filter, pager, sort) => {
+  _buildUrl = (root, filters, pager, sort) => {
     const query = {
-      $count: true
+      $count: true,
+      $select: this.columns.value.map(c => c.field).join(',')
     }
 
     // paging
@@ -157,17 +156,6 @@ class Grid {
     if (sort.field) { query.$orderby = `${sort.field} ${sort.direction}` }
 
     // filtering
-    const filters = []
-    for (const f of filter) {
-      switch (f.operator) {
-        case 'contains':
-          filters.push(`contains(${f.field}, '${f.value}')`)
-          break
-        default:
-          filters.push(`${f.field} ${f.operator} '${f.value}'`)
-      }
-    }
-
     if (filters.length > 0) {
       query.$filter = filters.join(' or ')
     }
@@ -210,7 +198,7 @@ class Grid {
       pageNumber++
       start += pageSize
     }
-    while ((start + pageSize) < total)
+    while (start < total)
 
     this.pager.value.pages = pages
   }

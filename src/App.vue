@@ -4,17 +4,73 @@ import VueGrid from './components/VueGrid.vue'
 
 <template>
   <VueGrid
-    name="TestGrid"
+    name="DimensionGrid"
     title="Dimension Values by Country"
     class="grid-style"
     rootUrl="http://localhost:5173/api/Dimension/country/DimensionValues"
     :columns="[
       { field: 'Code', filterable: true },
       { field: 'Title', filterable: true },
-      { field: 'ParentDimension', title: 'Parent Dimension' },
+      { field: 'ParentDimension' },
       { field: 'Dimension' },
-      { field: 'ParentCode', title: 'Parent Code', filterable: true },
-      { field: 'ParentTitle', title: 'Parent Title', filterable: true }
+      { field: 'ParentCode', filterable: true },
+      { field: 'ParentTitle', filterable: true }
+    ]"
+    :mapResponse="(response) => {
+      return {
+        data: response.value,
+        total: response['@odata.count']
+      }
+    }"
+  />
+
+  <VueGrid
+    name="IndicatorGrid"
+    title="Life Expectancy at Birth"
+    class="grid-style"
+    rootUrl="http://localhost:5173/api/WHOSIS_000001"
+    :columns="[
+      { field: 'Id', hidden: true },
+      { field: 'TimeDim', title: 'Year', dataType: Number, filterable: true },
+      { field: 'SpatialDim', title: 'Country', filterable: true },
+      { field: 'ParentLocation', filterable: true },
+      {
+        field: 'Dim1', title: 'Gender',
+        format: (value) => {
+          switch (value) {
+            case 'MLE': return 'Male'
+            case 'FMLE': return 'Female'
+            case 'BTSX': return 'Both sexes'
+            case 'UNK': return 'Unknown'
+            case 'NOA': return 'Not applicable'
+          }
+        }
+      },
+      { field: 'Value', title: 'Age', dataType: Number },
+      { field: 'NumericValue', dataType: Number, hidden: true },
+      /*
+      Available fields we aren't loading.
+      These fields will not be included in the odata query
+
+      { field: 'ParentLocationCode' },
+      { field: 'Dim1Type' },
+      { field: 'TimeDimType' },
+      { field: 'SpatialDimType' },
+      { field: 'IndicatorCode' },
+      { field: 'TimeDimensionValue' },
+      { field: 'TimeDimensionBegin' },
+      { field: 'TimeDimensionEnd' },
+      { field: 'Dim2Type' },
+      { field: 'Dim2' },
+      { field: 'Dim3Type' },
+      { field: 'Dim3' },
+      { field: 'DataSourceDimType' },
+      { field: 'DataSourceDim' },
+      { field: 'Low' },
+      { field: 'High' },
+      { field: 'Comments' },
+      { field: 'Date' },
+      */
     ]"
     :mapResponse="(response) => {
       return {
@@ -29,6 +85,7 @@ import VueGrid from './components/VueGrid.vue'
   .grid-style {
     min-width: 70rem;
     height: 800px;
+    margin: 2rem auto;
   }
 
   input[type='text'] {
