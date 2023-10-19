@@ -1,5 +1,10 @@
 <script setup>
 import VueGrid from './components/VueGrid.vue'
+
+const formatDate = (value) => {
+  const d = new Date(value)
+  return `${d.getUTCMonth() + 1}/${d.getUTCDate()}/${d.getUTCFullYear()}`
+}
 </script>
 
 <template>
@@ -48,6 +53,9 @@ import VueGrid from './components/VueGrid.vue'
       },
       { field: 'Value', title: 'Age', dataType: Number },
       { field: 'NumericValue', dataType: Number, hidden: true },
+      { field: 'TimeDimensionBegin', title: 'Time Begin', dataType: Date, format: formatDate },
+      { field: 'TimeDimensionBegin', title: 'Unformatted Time Begin', dataType: Date },
+      { field: 'TimeDimensionEnd', title: 'Time End', dataType: Date, format: formatDate },
       /*
       Available fields we aren't loading.
       These fields will not be included in the odata query
@@ -58,8 +66,6 @@ import VueGrid from './components/VueGrid.vue'
       { field: 'SpatialDimType' },
       { field: 'IndicatorCode' },
       { field: 'TimeDimensionValue' },
-      { field: 'TimeDimensionBegin' },
-      { field: 'TimeDimensionEnd' },
       { field: 'Dim2Type' },
       { field: 'Dim2' },
       { field: 'Dim3Type' },
