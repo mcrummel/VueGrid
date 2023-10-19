@@ -81,7 +81,7 @@ class Grid {
 
       switch (dataType) {
         case String:
-          this._filter.push(`contains(${field}, '${searchValue}')`)
+          this._filter.push(`contains(${field}, '${searchValue.replace(/[']/g, "''")}')`)
           break
         case Number:
           if (!isNaN(searchValue)) {
