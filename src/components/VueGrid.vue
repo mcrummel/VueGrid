@@ -146,14 +146,14 @@ grid.getData()
       </thead>
 
       <!-- Loading -->
-      <tbody v-if="grid.loading.value">
+      <tbody v-show="grid.loading.value">
         <tr>
           <td :colspan="grid.columns.value.length" class="loading">&nbsp;</td>
         </tr>
       </tbody>
 
       <!-- Table data -->
-      <tbody v-if="!grid.loading.value">
+      <tbody v-show="!grid.loading.value">
         <tr v-for="row in grid.data.value" :key="row.id">
           <td v-for="column in grid.columns.value" :key="column.field"
             :class="column.hidden ? 'hidden' : ''">
