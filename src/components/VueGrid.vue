@@ -168,7 +168,7 @@ grid.getData()
           <td :colspan="grid.columns.value.length">
             <div class="pager">
               <div>
-                Showing: {{ pageStart }} to {{ pageEnd }} of {{ totalRows }}
+                Showing: {{ pageStart + 1 }} to {{ pageEnd }} of {{ totalRows }}
               </div>
 
               <div>
