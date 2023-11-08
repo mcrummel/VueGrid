@@ -98,7 +98,7 @@ class Grid {
 
   getData = async () => {
     this.loading.value = true
-    await fetch(this._buildUrl(this._rootUrl, this._filter, this.pager.value, this.sorter), {
+    await fetch(this.#_buildUrl(this._rootUrl, this._filter, this.pager.value, this.sorter), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -106,7 +106,7 @@ class Grid {
       }
     })
       .then((response) => response.json())
-      .then(response => this._loadData(response))
+      .then(response => this.#_loadData(response))
       .catch(console.log)
       .finally(() => {
         this.loading.value = false
@@ -142,7 +142,7 @@ class Grid {
     })
   }
 
-  _buildUrl = (root, filters, pager, sort) => {
+  #_buildUrl = (root, filters, pager, sort) => {
     const query = {
       $count: true,
       $select: this.columns.value.map(c => c.field).join(',')
@@ -169,7 +169,7 @@ class Grid {
     return `${root}?${strQuery}`
   }
 
-  _loadData = (responObj) => {
+  #_loadData = (responObj) => {
     const resp = this._mapResponse(responObj)
     this.pager.value.total = resp.total
 
@@ -179,10 +179,10 @@ class Grid {
       this.data.value.push(record)
     }
 
-    this._getPages()
+    this.#_getPages()
   }
 
-  _getPages = () => {
+  #_getPages = () => {
     const pages = []
     const { pageSize, index, total } = this.pager.value
     let start = 0
