@@ -12,8 +12,8 @@ const props = defineProps({
   class: {
     type: String
   },
-  rootUrl: {
-    type: String,
+  dataSource: {
+    type: Object,
     required: true
   },
   mapResponse: {
@@ -69,20 +69,22 @@ const visiblePages = computed(() => {
 
 // object instantiation
 const grid = new Grid(
-  props.rootUrl,
+  props.dataSource,
   props.columns,
   props.mapResponse,
   props.pageSize
 )
 
+const strIsNullOrWhitespace = (value) => value === null || value === undefined || value.trim() === ''
+
 // formatters
 const formatTitle = (title, value) => {
-  if (title !== null && title !== undefined) {
+  if (!strIsNullOrWhitespace(title)) {
     return title
-  } else {
+  } else if (!strIsNullOrWhitespace(value)) {
     const s = value.replace(/([A-Z])/g, ' $1')
     return s[0].toUpperCase() + s.slice(1)
-  }
+  } else return value
 }
 
 const applyCustomFormatting = (field, row, formatter) =>
@@ -133,6 +135,13 @@ grid.getData()
           </td>
         </tr>
 
+        <!-- Command bar -->
+        <tr v-if="$slots['CommandBar']">
+          <td :colspan="grid.columns.value.length" class="command-bar">
+            <slot name="CommandBar" v-bind="grid" />
+          </td>
+        </tr>
+
         <!-- Column headers -->
         <tr>
           <th v-for="column in grid.columns.value" :key="column.index"
@@ -157,7 +166,12 @@ grid.getData()
         <tr v-for="row in grid.data.value" :key="row.id">
           <td v-for="column in grid.columns.value" :key="column.field"
             :class="column.hidden ? 'hidden' : ''">
-            {{ applyCustomFormatting(column.field, row, column.format) }}
+            <div v-if="$slots[column.field]">
+              <slot :name="column.field" v-bind="row"></slot>
+            </div>
+            <div v-else>
+              {{ applyCustomFormatting(column.field, row, column.format) }}
+            </div>
           </td>
         </tr>
       </tbody>
@@ -269,6 +283,10 @@ grid.getData()
         font-weight: bold;
       }
     }
+  }
+
+  .command-bar {
+    text-align: left;
   }
 
   .pager {

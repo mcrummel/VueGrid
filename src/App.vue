@@ -1,18 +1,48 @@
 <script setup>
 import VueGrid from './components/VueGrid.vue'
+import { ref } from 'vue'
 
 const formatDate = (value) => {
   const d = new Date(value)
   return `${d.getUTCMonth() + 1}/${d.getUTCDate()}/${d.getUTCFullYear()}`
 }
+const testData = ref([])
+
+// get all records from the service to populate DimensionGrid's data object
+const loadInitialData = async (limit) => {
+  console.log(`Fetching dimension data limit: ${limit || 0}`)
+  return await fetch('http://localhost:5173/api/Dimension/country/DimensionValues?$count=true', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    }
+  })
+    .then((response) => response.json())
+    .then((response) => {
+      const data = limit
+        ? response.value.slice(0, limit)
+        : response.value
+
+      testData.value = data
+      console.log('Data retrieved')
+    })
+    .catch(console.log)
+}
+
+loadInitialData()
 </script>
 
 <template>
-  <VueGrid
+  <!-- Static data demo -->
+  <VueGrid v-if="testData.length > 0"
     name="DimensionGrid"
     title="Dimension Values by Country"
     class="grid-style"
-    rootUrl="http://localhost:5173/api/Dimension/country/DimensionValues"
+    :dataSource="{
+      data: testData,
+      type: 'raw'
+    }"
     :columns="[
       { field: 'Code', filterable: true },
       { field: 'Title', filterable: true },
@@ -20,23 +50,31 @@ const formatDate = (value) => {
       { field: 'Dimension' },
       { field: 'ParentCode', filterable: true },
       { field: 'ParentTitle', filterable: true }
-    ]"
-    :mapResponse="(response) => {
-      return {
-        data: response.value,
-        total: response['@odata.count']
-      }
-    }"
-  />
+    ]">
+    <template #Dimension="{ Code, Dimension }">
+      <a href="#">{{ Dimension }}</a> ({{Code}})
+    </template>
+    <template #ParentCode="{ ParentCode }">
+      <span style="color:red;">{{ ParentCode }}</span>
+    </template>
+    <template #CommandBar="{}">
+      <button @click="loadInitialData(20)">Add New</button>
+    </template>
+  </VueGrid>
 
+  <!-- OData demo -->
   <VueGrid
     name="IndicatorGrid"
     title="Life Expectancy at Birth"
     class="grid-style"
-    rootUrl="http://localhost:5173/api/WHOSIS_000001"
+    :dataSource="{
+      type: 'odata',
+      rootUrl: 'http://localhost:5173/api/WHOSIS_000001'
+    }"
     :columns="[
+      { columnType: 'Command' },
       { field: 'Id', hidden: true },
-      { field: 'TimeDim', title: 'Year', dataType: Number, filterable: true },
+      { field: 'TimeDim', title: 'Year', columnType: Number, filterable: true },
       { field: 'SpatialDim', title: 'Country', filterable: true },
       { field: 'ParentLocation', filterable: true },
       {
@@ -51,11 +89,11 @@ const formatDate = (value) => {
           }
         }
       },
-      { field: 'Value', title: 'Age', dataType: Number },
-      { field: 'NumericValue', dataType: Number, hidden: true },
-      { field: 'TimeDimensionBegin', title: 'Time Begin', dataType: Date, format: formatDate },
-      { field: 'TimeDimensionBegin', title: 'Unformatted Time Begin', dataType: Date },
-      { field: 'TimeDimensionEnd', title: 'Time End', dataType: Date, format: formatDate },
+      { field: 'Value', title: 'Age', columnType: Number },
+      { field: 'NumericValue', columnType: Number, hidden: true },
+      { field: 'TimeDimensionBegin', title: 'Time Begin', columnType: Date, format: formatDate },
+      { field: 'TimeDimensionBegin', title: 'Unformatted Time Begin', columnType: Date },
+      { field: 'TimeDimensionEnd', title: 'Time End', columnType: Date, format: formatDate },
       /*
       Available fields we aren't loading.
       These fields will not be included in the odata query
@@ -83,8 +121,7 @@ const formatDate = (value) => {
         data: response.value,
         total: response['@odata.count']
       }
-    }"
-  />
+    }" />
 </template>
 
 <style lang="scss">

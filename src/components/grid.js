@@ -1,21 +1,21 @@
 import { ref } from 'vue'
 
 class Grid {
-  #_rootUrl
+  #_dataSource
   #_mapResponse
-  #_filter
+  #_filters
 
-  constructor (rootUrl, columns, mapResponse, pageSize) {
-    this._rootUrl = rootUrl
-    this._mapResponse = mapResponse || ((data) => data)
-    this._filter = []
+  constructor (dataSource, columns, mapResponse, pageSize) {
+    this.#_dataSource = dataSource
+    this.#_mapResponse = mapResponse || ((data) => data)
+    this.#_filters = []
 
     const _columnTemplate = {
       field: '',
       title: null,
       format: (value) => value,
       sortDirection: null,
-      dataType: String,
+      columnType: String,
       filterable: false
     }
 
@@ -69,48 +69,87 @@ class Grid {
   })
 
   filterData = async (searchValue) => {
-    this._filter = []
+    this.#_filters = []
     this.pager.value.index = 0
 
-    if (searchValue === undefined || searchValue === null) {
-      return await this.getData()
-    }
+    if (searchValue !== undefined && searchValue !== null) {
+      for (const { filterable, columnType, field } of this.columns.value) {
+        if (!filterable) continue
 
-    for (const { filterable, dataType, field } of this.columns.value) {
-      if (!filterable) continue
-
-      switch (dataType) {
-        case String:
-          this._filter.push(`contains(${field}, '${searchValue.replace(/[']/g, "''")}')`)
-          break
-        case Number:
-          if (!isNaN(searchValue)) {
-            this._filter.push(`${field} eq ${searchValue}`)
-          }
-          break
-        default:
-          break
+        switch (columnType) {
+          case String:
+            this.#_filters.push({
+              field,
+              searchValue,
+              operator: 'contains'
+            })
+            break
+          case Number:
+            if (!isNaN(searchValue)) {
+              this.#_filters.push({
+                field,
+                searchValue,
+                operator: 'eq'
+              })
+            }
+            break
+          default:
+            break
+        }
       }
     }
 
-    await this.getData()
+    return await this.getData()
   }
 
   getData = async () => {
     this.loading.value = true
-    await fetch(this.#_buildUrl(this._rootUrl, this._filter, this.pager.value, this.sorter), {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-      }
-    })
-      .then((response) => response.json())
-      .then(response => this.#_loadData(response))
-      .catch(console.log)
-      .finally(() => {
-        this.loading.value = false
+
+    const dataSourceType = this.#_dataSource.type || 'raw'
+
+    if (dataSourceType.toLowerCase() === 'odata') {
+      await fetch(this.#_buildOdataUrl(this.#_dataSource.rootUrl, this.pager.value, this.sorter), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        }
       })
+        .then((response) => response.json())
+        .then(response => {
+          const mappedResponse = this.#_mapResponse(response)
+          this.loadData(mappedResponse)
+        })
+        .catch(console.log)
+        .finally(() => {
+          this.loading.value = false
+        })
+    } else if (dataSourceType.toLowerCase() === 'raw') {
+      this.loadData({
+        total: this.#_dataSource.data.length,
+        data: this.#_dataSource.data
+      })
+
+      this.loading.value = false
+    }
+  }
+
+  loadData = (dataSet) => {
+    this.data.value = []
+    let data = dataSet.data
+
+    if (this.#_dataSource.type === 'raw') {
+      // data =  this.#_sortData(data)
+      data = this.#_applyFilter(data)
+      dataSet.total = data.length
+
+      data = this.#_applyPaging(data)
+    }
+
+    for (const record of data) {
+      this.data.value.push(record)
+    }
+    this.#_getPages(dataSet.total)
   }
 
   gotoPage = async (page) => {
@@ -142,10 +181,13 @@ class Grid {
     })
   }
 
-  #_buildUrl = (root, filters, pager, sort) => {
+  #_buildOdataUrl = (root, pager, sort) => {
     const query = {
       $count: true,
-      $select: this.columns.value.map(c => c.field).join(',')
+      $select: this.columns.value
+        .filter(c => !this.#_strIsNullOrWhitespace(c.field))
+        .map(c => c.field)
+        .join(',')
     }
 
     // paging
@@ -156,8 +198,21 @@ class Grid {
     if (sort.field) { query.$orderby = `${sort.field} ${sort.direction}` }
 
     // filtering
-    if (filters.length > 0) {
-      query.$filter = filters.join(' or ')
+    if (this.#_filters.length > 0) {
+      query.$filter = this.#_filters.map(({ field, searchValue, operator }) => {
+        let filter
+
+        switch (operator) {
+          case 'contains':
+            filter = `contains(${field}, '${searchValue.replace(/[']/g, "''")}')`
+            break
+          case 'eq':
+            filter = `${field} eq ${searchValue}`
+            break
+        }
+
+        return filter
+      }).join(' or ')
     }
 
     const strQuery = Object.entries(query)
@@ -169,20 +224,37 @@ class Grid {
     return `${root}?${strQuery}`
   }
 
-  #_loadData = (responObj) => {
-    const resp = this._mapResponse(responObj)
-    this.pager.value.total = resp.total
+  #_applyFilter = (data) => {
+    if (this.#_filters.length === 0) { return data }
 
-    this.data.value = []
-    const records = resp.data
-    for (const record of records) {
-      this.data.value.push(record)
-    }
+    return data.filter(row => {
+      let isMatch = false
+      for (const { field, searchValue, operator } of this.#_filters) {
+        const value = (row[field] || '').toString()
 
-    this.#_getPages()
+        switch (operator) {
+          case 'contains':
+            isMatch = value.includes(searchValue)
+            break
+          case 'eq':
+            isMatch = value === searchValue.toString()
+            break
+        }
+
+        if (isMatch) break
+      }
+
+      return isMatch
+    })
   }
 
-  #_getPages = () => {
+  #_applyPaging = (data) => {
+    const { index, pageSize } = this.pager.value
+    return data.slice(index, index + pageSize)
+  }
+
+  #_getPages = (totalRecordsCount) => {
+    this.pager.value.total = totalRecordsCount
     const pages = []
     const { pageSize, index, total } = this.pager.value
     let start = 0
@@ -202,6 +274,8 @@ class Grid {
 
     this.pager.value.pages = pages
   }
+
+  #_strIsNullOrWhitespace = (value) => value === null || value === undefined || value.trim() === ''
 }
 
 export default Grid
