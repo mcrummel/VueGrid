@@ -64,9 +64,11 @@ class Grid {
   sort = async (column) => {
     const { sortDirection } = column
     column.sortDirection =
-        sortDirection === 'ASC'
-          ? 'DESC'
-          : sortDirection === 'DESC' ? null : 'ASC'
+        sortDirection === this.#_constants.directions.ascending
+          ? this.#_constants.directions.descending
+          : sortDirection === this.#_constants.directions.descending
+            ? null
+            : this.#_constants.directions.ascending
 
     this.sorter = column.sortDirection
       ? {
