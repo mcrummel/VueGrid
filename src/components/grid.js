@@ -4,6 +4,20 @@ class Grid {
   #_dataSource
   #_mapResponse
   #_filters
+  #_constants = {
+    dataSourceTypes: {
+      raw: 'raw',
+      odata: 'odata'
+    },
+    directions: {
+      ascending: 'ASC',
+      descending: 'DESC'
+    },
+    operators: {
+      equals: 'eq',
+      contains: 'contains'
+    }
+  }
 
   constructor (dataSource, columns, mapResponse, pageSize) {
     this.#_dataSource = dataSource
@@ -40,7 +54,7 @@ class Grid {
 
   // public methods
   sortRecords = async (records, sort) => {
-    const compare = sort.direction === 'ASC'
+    const compare = sort.direction === this.#_constants.directions.ascending
       ? (a, b) => a[sort.field] > b[sort.field] ? 1 : a[sort.field] < b[sort.field] ? -1 : 0
       : (a, b) => a[sort.field] < b[sort.field] ? 1 : a[sort.field] > b[sort.field] ? -1 : 0
 
@@ -81,7 +95,7 @@ class Grid {
             this.#_filters.push({
               field,
               searchValue,
-              operator: 'contains'
+              operator: this.#_constants.operators.contains
             })
             break
           case Number:
@@ -89,7 +103,7 @@ class Grid {
               this.#_filters.push({
                 field,
                 searchValue,
-                operator: 'eq'
+                operator: this.#_constants.operators.equals
               })
             }
             break
@@ -105,9 +119,9 @@ class Grid {
   getData = async () => {
     this.loading.value = true
 
-    const dataSourceType = this.#_dataSource.type || 'raw'
+    const dataSourceType = this.#_dataSource.type || this.#_constants.dataSourceTypes.raw
 
-    if (dataSourceType.toLowerCase() === 'odata') {
+    if (dataSourceType.toLowerCase() === this.#_constants.dataSourceTypes.odata) {
       await fetch(this.#_buildOdataUrl(this.#_dataSource.rootUrl, this.pager.value, this.sorter), {
         method: 'GET',
         headers: {
@@ -124,7 +138,7 @@ class Grid {
         .finally(() => {
           this.loading.value = false
         })
-    } else if (dataSourceType.toLowerCase() === 'raw') {
+    } else if (dataSourceType.toLowerCase() === this.#_constants.dataSourceTypes.raw) {
       this.loadData({
         total: this.#_dataSource.data.length,
         data: [...this.#_dataSource.data]
@@ -138,7 +152,7 @@ class Grid {
     this.data.value = []
     let data = dataSet.data
 
-    if (this.#_dataSource.type === 'raw') {
+    if (this.#_dataSource.type === this.#_constants.dataSourceTypes.raw) {
       data = this.#_sortData(data)
       data = this.#_applyFilter(data)
       dataSet.total = data.length
@@ -203,10 +217,10 @@ class Grid {
         let filter
 
         switch (operator) {
-          case 'contains':
+          case this.#_constants.operators.contains:
             filter = `contains(${field}, '${searchValue.replace(/[']/g, "''")}')`
             break
-          case 'eq':
+          case this.#_constants.operators.equals:
             filter = `${field} eq ${searchValue}`
             break
         }
@@ -233,10 +247,10 @@ class Grid {
         const value = (row[field] || '').toString()
 
         switch (operator) {
-          case 'contains':
+          case this.#_constants.operators.contains:
             isMatch = value.includes(searchValue)
             break
-          case 'eq':
+          case this.#_constants.operators.equals:
             isMatch = value === searchValue.toString()
             break
         }
@@ -281,9 +295,9 @@ class Grid {
     if (field && direction) {
       data = data.sort((a, b) => {
         switch (direction) {
-          case 'ASC':
+          case this.#_constants.directions.ascending:
             return a[field] < b[field] ? -1 : 1
-          case 'DESC':
+          case this.#_constants.directions.descending:
             return b[field] < a[field] ? -1 : 1
         }
 
