@@ -127,7 +127,7 @@ class Grid {
     } else if (dataSourceType.toLowerCase() === 'raw') {
       this.loadData({
         total: this.#_dataSource.data.length,
-        data: this.#_dataSource.data
+        data: [...this.#_dataSource.data]
       })
 
       this.loading.value = false
@@ -139,7 +139,7 @@ class Grid {
     let data = dataSet.data
 
     if (this.#_dataSource.type === 'raw') {
-      // data =  this.#_sortData(data)
+      data = this.#_sortData(data)
       data = this.#_applyFilter(data)
       dataSet.total = data.length
 
@@ -273,6 +273,25 @@ class Grid {
     while (start < total)
 
     this.pager.value.pages = pages
+  }
+
+  #_sortData = (data) => {
+    const { field, direction } = this.sorter
+
+    if (field && direction) {
+      data = data.sort((a, b) => {
+        switch (direction) {
+          case 'ASC':
+            return a[field] < b[field] ? -1 : 1
+          case 'DESC':
+            return b[field] < a[field] ? -1 : 1
+        }
+
+        return 0
+      })
+    }
+
+    return data
   }
 
   #_strIsNullOrWhitespace = (value) => value === null || value === undefined || value.trim() === ''
