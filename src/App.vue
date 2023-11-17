@@ -9,8 +9,7 @@ const formatDate = (value) => {
 const testData = ref([])
 
 // get all records from the service to populate DimensionGrid's data object
-const loadInitialData = async (limit) => {
-  console.log(`Fetching dimension data limit: ${limit || 0}`)
+const loadInitialData = async (grid) => {
   return await fetch('http://localhost:5173/api/Dimension/country/DimensionValues?$count=true', {
     method: 'GET',
     headers: {
@@ -20,12 +19,12 @@ const loadInitialData = async (limit) => {
   })
     .then((response) => response.json())
     .then((response) => {
-      const data = limit
-        ? response.value.slice(0, limit)
-        : response.value
-
-      testData.value = data
-      console.log('Data retrieved')
+      testData.value = response.value
+    })
+    .then(() => {
+      if (grid) {
+        grid.loadRawData(testData.value)
+      }
     })
     .catch(console.log)
 }
@@ -57,8 +56,8 @@ loadInitialData()
     <template #ParentCode="{ ParentCode }">
       <span style="color:red;">{{ ParentCode }}</span>
     </template>
-    <template #CommandBar="{}">
-      <button @click="loadInitialData(20)">Add New</button>
+    <template #CommandBar="grid">
+      <button @click="loadInitialData(grid);">Refresh</button>
     </template>
   </VueGrid>
 

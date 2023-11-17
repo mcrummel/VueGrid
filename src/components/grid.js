@@ -150,6 +150,11 @@ class Grid {
     }
   }
 
+  loadRawData = (rawData) => {
+    this.#_dataSource.data = rawData
+    this.getData()
+  }
+
   loadData = (dataSet) => {
     this.data.value = []
     let data = dataSet.data
