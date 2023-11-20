@@ -1,6 +1,6 @@
 <script setup>
 import Grid from './grid'
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 
 const props = defineProps({
   name: {
@@ -75,22 +75,36 @@ const grid = new Grid(
   props.pageSize
 )
 
-const strIsNullOrWhitespace = (value) => value === null || value === undefined || value.trim() === ''
+watch(() => props.dataSource.data,
+  (newData) => {
+    console.log('watch triggered')
+    grid.loadRawData(newData)
+  })
 
 // formatters
-const formatTitle = (title, value) => {
+const formatTitle = (column) => {
+  const { title, field, columnType } = column
+  console.log(column)
+
   if (!strIsNullOrWhitespace(title)) {
     return title
-  } else if (!strIsNullOrWhitespace(value)) {
-    const s = value.replace(/([A-Z])/g, ' $1')
+  } else if (
+    typeof (columnType) === 'string' &&
+    !strIsNullOrWhitespace(columnType) &&
+    columnType.toUpperCase() === 'COMMAND') {
+    return ''
+  } else if (!strIsNullOrWhitespace(field)) {
+    const s = field.replace(/([A-Z])/g, ' $1')
     return s[0].toUpperCase() + s.slice(1)
-  } else return value
+  } else return field
 }
 
 const applyCustomFormatting = (field, row, formatter) =>
   formatter ? formatter(row[field], row) : row[field]
 
 // functions
+const strIsNullOrWhitespace = (value) => value === null || value === undefined || value.trim() === ''
+
 const gotoPageByPageNumber = async (pageNumber) => {
   const page = pageNumber < 1
     ? pages.value[0]
@@ -147,7 +161,7 @@ grid.getData()
           <th v-for="column in grid.columns.value" :key="column.index"
             @click="grid.sort(column)"
             :class="column.hidden ? 'hidden' : ''">
-            {{ formatTitle(column.title, column.field) }}
+            {{ formatTitle(column) }}
             <span v-if="column.sortDirection === 'ASC'">&#x2191;</span>
             <span v-else-if="column.sortDirection === 'DESC'">&#x2193;</span>
           </th>
