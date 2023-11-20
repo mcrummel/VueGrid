@@ -6,10 +6,23 @@ const formatDate = (value) => {
   const d = new Date(value)
   return `${d.getUTCMonth() + 1}/${d.getUTCDate()}/${d.getUTCFullYear()}`
 }
+
+const editData = ref([{
+  firstName: 'Example',
+  lastName: 'User',
+  phoneNumber: '1235551212',
+  address: '123 Street ave.',
+  city: 'Springfield',
+  state: 'AK',
+  postalCode: '12345'
+}])
+
 const testData = ref([])
+const testDataLimit = ref(0)
 
 // get all records from the service to populate DimensionGrid's data object
-const loadInitialData = async (grid) => {
+const loadInitialData = async () => {
+  console.log(`Fetching dimension data limit: ${testDataLimit.value || 0}`)
   return await fetch('http://localhost:5173/api/Dimension/country/DimensionValues?$count=true', {
     method: 'GET',
     headers: {
@@ -19,12 +32,13 @@ const loadInitialData = async (grid) => {
   })
     .then((response) => response.json())
     .then((response) => {
-      testData.value = response.value
-    })
-    .then(() => {
-      if (grid) {
-        grid.loadRawData(testData.value)
-      }
+      const data = testDataLimit.value
+        ? response.value.slice(0, testDataLimit.value)
+        : response.value
+
+      testData.value = data
+      testDataLimit.value = data.length
+      console.log('Data retrieved')
     })
     .catch(console.log)
 }
@@ -33,15 +47,36 @@ loadInitialData()
 </script>
 
 <template>
-  <!-- Static data demo -->
+  <h2>Editable Table Demo</h2>
+  <VueGrid
+    name="ContactsGrid"
+    title="Contacts"
+    class="grid-style"
+    :dataSource="{ data: editData, type: 'raw' }"
+    :columns="[
+      { field: 'editCommand', columnType: 'Command' },
+      { field: 'firstName', filterable: true },
+      { field: 'lastName', filterable: true },
+      { field: 'phoneNumber' },
+      { field: 'address' },
+      { field: 'city', filterable: true },
+      { field: 'state', filterable: true },
+      { field: 'postalCode' }
+    ]">
+    <template #CommandBar>
+      <button>Add New</button>
+    </template>
+    <template #editCommand>
+      <button>Edit</button>
+    </template>
+  </VueGrid>
+
+  <h2>Static Data Demo</h2>
   <VueGrid v-if="testData.length > 0"
     name="DimensionGrid"
     title="Dimension Values by Country"
     class="grid-style"
-    :dataSource="{
-      data: testData,
-      type: 'raw'
-    }"
+    :dataSource="{ data: testData }"
     :columns="[
       { field: 'Code', filterable: true },
       { field: 'Title', filterable: true },
@@ -50,18 +85,20 @@ loadInitialData()
       { field: 'ParentCode', filterable: true },
       { field: 'ParentTitle', filterable: true }
     ]">
+    <template #CommandBar>
+      <span>Record Limit:</span>
+      <input type="text" v-model="testDataLimit" style="width: 2rem; text-align:center;">
+      <button @click="loadInitialData(20);">Refresh Data</button>
+    </template>
     <template #Dimension="{ Code, Dimension }">
       <a href="#">{{ Dimension }}</a> ({{Code}})
     </template>
     <template #ParentCode="{ ParentCode }">
       <span style="color:red;">{{ ParentCode }}</span>
     </template>
-    <template #CommandBar="grid">
-      <button @click="loadInitialData(grid);">Refresh</button>
-    </template>
   </VueGrid>
 
-  <!-- OData demo -->
+  <h2>OData Demo</h2>
   <VueGrid
     name="IndicatorGrid"
     title="Life Expectancy at Birth"
@@ -71,7 +108,6 @@ loadInitialData()
       rootUrl: 'http://localhost:5173/api/WHOSIS_000001'
     }"
     :columns="[
-      { columnType: 'Command' },
       { field: 'Id', hidden: true },
       { field: 'TimeDim', title: 'Year', columnType: Number, filterable: true },
       { field: 'SpatialDim', title: 'Country', filterable: true },
@@ -127,7 +163,7 @@ loadInitialData()
   .grid-style {
     min-width: 70rem;
     height: 800px;
-    margin: 2rem auto;
+    margin: 2rem auto 4rem;
   }
 
   input[type='text'] {
