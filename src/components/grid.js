@@ -20,18 +20,12 @@ class Grid {
   }
 
   constructor (dataSource, columns, mapResponse, pageSize) {
-    this.#_dataSource = dataSource
+    this.#_dataSource = {
+      type: this.#_constants.dataSourceTypes.raw,
+      ...dataSource
+    }
     this.#_mapResponse = mapResponse || ((data) => data)
     this.#_filters = []
-
-    const _columnTemplate = {
-      field: '',
-      title: null,
-      format: (value) => value,
-      sortDirection: null,
-      columnType: String,
-      filterable: false
-    }
 
     // properties
     this.namespaced = true
@@ -47,6 +41,14 @@ class Grid {
     })
 
     // init columns
+    const _columnTemplate = {
+      field: '',
+      title: null,
+      format: (value) => value,
+      sortDirection: null,
+      columnType: String,
+      filterable: false
+    }
     columns.forEach(c => {
       this.columns.value.push({ ..._columnTemplate, ...c })
     })
