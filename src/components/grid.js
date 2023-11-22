@@ -41,18 +41,38 @@ class Grid {
     })
 
     // init columns
-    const _columnTemplate = {
-      field: '',
-      title: null,
-      format: (value) => value,
-      sortDirection: null,
-      columnType: String,
-      filterable: false
-    }
     columns.forEach(c => {
-      this.columns.value.push({ ..._columnTemplate, ...c })
+      this.columns.value.push({ ...Grid.columnTemplate, ...c })
     })
   }
+
+  // Static properties
+  static columnTemplate = {
+    field: '',
+    title: null,
+    format: (value) => value,
+    sortDirection: null,
+    columnType: String,
+    filterable: false
+  }
+
+  // Static methods
+  static formatTitle = (column) => {
+    const { title, field, columnType } = column
+    if (!this.strIsNullOrWhitespace(title)) {
+      return title
+    } else if (
+      typeof (columnType) === 'string' &&
+      !this.strIsNullOrWhitespace(columnType) &&
+      columnType.toUpperCase() === 'COMMAND') {
+      return ''
+    } else if (!this.strIsNullOrWhitespace(field)) {
+      const s = field.replace(/([A-Z])/g, ' $1')
+      return s[0].toUpperCase() + s.slice(1)
+    } else return field
+  }
+
+  static strIsNullOrWhitespace = (value) => value === null || value === undefined || value.trim() === ''
 
   // public methods
   sortRecords = async (records, sort) => {

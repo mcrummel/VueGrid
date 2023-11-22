@@ -1,5 +1,5 @@
 <script setup>
-import Grid from './grid'
+import Grid from './grid.js'
 import { computed, watch } from 'vue'
 
 const props = defineProps({
@@ -75,36 +75,22 @@ const grid = new Grid(
   props.pageSize
 )
 
-watch(() => props.dataSource.data,
-  (newData) => {
-    console.log('watch triggered')
-    grid.loadRawData(newData)
-  })
-
-// formatters
-const formatTitle = (column) => {
-  const { title, field, columnType } = column
-  console.log(column)
-
-  if (!strIsNullOrWhitespace(title)) {
-    return title
-  } else if (
-    typeof (columnType) === 'string' &&
-    !strIsNullOrWhitespace(columnType) &&
-    columnType.toUpperCase() === 'COMMAND') {
-    return ''
-  } else if (!strIsNullOrWhitespace(field)) {
-    const s = field.replace(/([A-Z])/g, ' $1')
-    return s[0].toUpperCase() + s.slice(1)
-  } else return field
+if ((props.dataSource.type || 'raw') === 'raw') {
+  watch(() => props.dataSource.data,
+    (newData) => {
+      console.log('watch triggered')
+      grid.loadRawData(newData)
+    },
+    {
+      deep: true
+    })
 }
 
+// formatters
 const applyCustomFormatting = (field, row, formatter) =>
   formatter ? formatter(row[field], row) : row[field]
 
 // functions
-const strIsNullOrWhitespace = (value) => value === null || value === undefined || value.trim() === ''
-
 const gotoPageByPageNumber = async (pageNumber) => {
   const page = pageNumber < 1
     ? pages.value[0]
@@ -161,7 +147,7 @@ grid.getData()
           <th v-for="column in grid.columns.value" :key="column.index"
             @click="grid.sort(column)"
             :class="column.hidden ? 'hidden' : ''">
-            {{ formatTitle(column) }}
+            {{ Grid.formatTitle(column) }}
             <span v-if="column.sortDirection === 'ASC'">&#x2191;</span>
             <span v-else-if="column.sortDirection === 'DESC'">&#x2193;</span>
           </th>
@@ -301,6 +287,7 @@ grid.getData()
 
   .command-bar {
     text-align: left;
+    padding: 0 !important;
   }
 
   .pager {
