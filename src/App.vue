@@ -2,7 +2,9 @@
 </script>
 
 <template>
-  <h1>VueGrid Demos</h1>
+  <router-link :to="{ name: 'home' }">
+    <h1 id="appTitle">VueGrid Demos</h1>
+  </router-link>
   <nav id="demosNav">
     <router-link :to="{ name: 'editable' }">Editable Table</router-link> |
     <router-link :to="{ name: 'staticData' }">Static Data Example</router-link> |
@@ -14,8 +16,9 @@
 </template>
 
 <style lang="scss">
-  h1 {
+  #appTitle {
     margin-bottom: 1rem;
+    color: #555
   }
   #demosNav {
     background-color: #ddd;
