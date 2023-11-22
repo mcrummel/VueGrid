@@ -8,16 +8,19 @@ export default [
   {
     name: 'editable',
     path: `${path}/editable`,
+    title: 'Editable Table',
     component: EditableTable
   },
   {
     name: 'staticData',
     path: `${path}/static`,
+    title: 'Static Data Example',
     component: StaticData
   },
   {
     name: 'odata',
     path: `${path}/odata`,
+    title: 'Odata Example',
     component: OdataExample
   }
 ]

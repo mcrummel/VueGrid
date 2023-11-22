@@ -1,30 +1,42 @@
 <script setup>
+import { routes } from './routing/router.js'
+
+const demoRoutes = routes.filter(_ => _.path.startsWith('/demos/'))
 </script>
 
 <template>
   <router-link :to="{ name: 'home' }">
     <h1 id="appTitle">VueGrid Demos</h1>
   </router-link>
-  <nav id="demosNav">
-    <router-link :to="{ name: 'editable' }">Editable Table</router-link> |
-    <router-link :to="{ name: 'staticData' }">Static Data Example</router-link> |
-    <router-link :to="{ name: 'odata' }">Odata Example</router-link>
+  <nav>
+    <span v-for="{ name, title } of demoRoutes" :key="name"
+      class="nav-link">
+        <router-link :to="{ name: name }">{{ title }}</router-link>
+    </span>
   </nav>
-  <main id="content">
+  <main>
     <router-view />
   </main>
 </template>
 
-<style lang="scss">
+<style scoped lang="scss">
   #appTitle {
     margin-bottom: 1rem;
     color: #555
   }
-  #demosNav {
+  nav {
     background-color: #ddd;
   }
   main {
     margin-top: 3rem;
+  }
+
+  .nav-link {
+    padding: 0 0.5rem;
+    border-right: 2px solid #888;
+  }
+  .nav-link:last-child {
+    border-right:none;
   }
 
   .grid-style {
@@ -38,7 +50,9 @@
     height: 2rem;
     margin: 0.5rem;
   }
+</style>
 
+<style lang="scss">
   /* demonstration of style overrides */
   $title-color: #6c6f70;
   $green-color:  #5cb85c;
@@ -76,5 +90,4 @@
       color: #333;
     }
   }
-  /**/
 </style>

@@ -6,15 +6,13 @@ import App from './App.vue'
 
 import { routes } from './routing/router'
 
+console.log(routes)
+
 const router = createRouter({
   history: createWebHistory(),
   routes
 })
 
-const app = createApp(App)
-
-console.log(routes)
-
-app
+createApp(App)
   .use(router)
   .mount('#app')

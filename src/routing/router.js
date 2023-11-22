@@ -5,6 +5,7 @@ export const routes = [
   {
     name: 'home',
     path: '/',
+    title: '',
     component: HomeComponent
   },
   ...demoRoutes
