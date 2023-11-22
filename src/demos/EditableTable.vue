@@ -19,10 +19,15 @@ const editData = ref([{
 }])
 
 const saveData = (record) => {
-  if (!record.id) { record.id = getNewIndex() }
+  if (!record.id) {
+    record.id = getNewIndex()
+    editData.value.push(record)
+  } else {
+    const index = editData.value.findIndex(_ => _.id === record.id)
+    editData.value[index] = record
+  }
 
-  editData.value.push(record)
-  showNewInputForm.value = false
+  currentRecord.value = {}
 }
 
 // edit form related objects
@@ -36,49 +41,79 @@ const formInputs = [
   { name: 'postalCode', title: 'Postal Code' }
 ]
 
-const showEditForm = () => {
-  showNewInputForm.value = true
-}
+const currentRecord = ref({})
 
-const showNewInputForm = ref(false)
+const showEditForm = (record) => {
+  console.log(record)
+  currentRecord.value = record
+}
 </script>
 
 <template>
-    <VueGrid
-      name="ContactsGrid"
-      title="Editable Table"
-      class="grid-style"
-      :dataSource="{ data: editData }"
-      :columns="[
-        { field: 'editCommand', columnType: 'Command' },
-        { field: 'id', columnType: Number },
-        { field: 'firstName', filterable: true },
-        { field: 'lastName', filterable: true },
-        { field: 'phoneNumber' },
-        { field: 'address' },
-        { field: 'city', filterable: true },
-        { field: 'state', filterable: true },
-        { field: 'postalCode' }
-      ]">
-      <template #CommandBar>
-        <button v-if="!showNewInputForm" @click="showEditForm()">Add New</button>
-        <div class="edit-form" v-if="showNewInputForm">
-          <EditRecord
-            :inputs="formInputs"
-            :values="formValues"
-            @save="saveData"
-            @cancel="() => showNewInputForm = false"
-        />
-        </div>
-      </template>
-      <template #editCommand>
-        <!-- <button @click="this.$router.push({
-          name: 'edit',
-          params: { id }
-        })">Edit</button> -->
-      </template>
-    </VueGrid>
+
+  <Transition name="slide-fade">
+    <section v-if="currentRecord.id >= 0">
+      <EditRecord
+      :inputs="formInputs"
+      :data="currentRecord"
+      @save="saveData"
+      @cancel="showEditForm({})" />
+    </section>
+  </Transition>
+
+  <VueGrid
+    name="ContactsGrid"
+    title="Editable Table"
+    class="grid-style"
+    :dataSource="{ data: editData }"
+    :columns="[
+      { field: 'editCommand', columnType: 'Command' },
+      { field: 'id', columnType: Number },
+      { field: 'firstName', filterable: true },
+      { field: 'lastName', filterable: true },
+      { field: 'phoneNumber' },
+      { field: 'address' },
+      { field: 'city', filterable: true },
+      { field: 'state', filterable: true },
+      { field: 'postalCode' }
+    ]">
+    <template #CommandBar>
+      <button v-if="currentRecord.id === undefined" @click="showEditForm({ id: 0 })">
+        <font-awesome-icon :icon="['fas', 'plus']" v-if="currentRecord.id === undefined" @click="showEditForm({ id: 0 })" />
+      </button>
+    </template>
+    <template #editCommand="row">
+      <div class="edit-column">
+        <button @click="showEditForm(row)">
+          <font-awesome-icon :icon="['fas', 'pencil']" />
+        </button>
+        <button>
+          <font-awesome-icon :icon="['fas', 'trash-can']" />
+        </button>
+      </div>
+    </template>
+  </VueGrid>
 </template>
 
-<style scoped lang="scss">
+<style scoped>
+.edit-column {
+  margin: auto -1rem;
+  >button {
+    margin: 0.1rem;
+  }
+}
+
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: scaleY(20px);
+  opacity: 0;
+}
 </style>

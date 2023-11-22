@@ -2,16 +2,15 @@
 import { ref } from 'vue'
 
 const props = defineProps({
-  inputs: {
-    type: Array
-  }
+  inputs: { type: Array },
+  data: { type: Array }
 })
 
-const emit = defineEmits(['save', 'cancel'])
+const emit = defineEmits(['save', 'cancel', 'load'])
 const valueRefs = ref([])
 
 const saveRecord = (e) => {
-  const record = {}
+  const record = props.data
 
   for (const { name, value } of valueRefs.value) {
     record[name] = value
@@ -29,7 +28,7 @@ const saveRecord = (e) => {
                 class="item">
                 <div>
                     <label :for="name">{{ title }}</label>
-                    <input type="text" :name="name" ref="valueRefs" />
+                    <input type="text" :name="name" ref="valueRefs" :value="props.data[name]" />
                 </div>
             </div>
         </div>
@@ -59,6 +58,7 @@ const saveRecord = (e) => {
                 label {
                     display: block;
                     margin: 0.5rem 0.5rem 0 0.5rem;
+                    text-align: left;
                 }
                 input {
                     width: 90%;

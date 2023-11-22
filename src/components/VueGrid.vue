@@ -78,7 +78,6 @@ const grid = new Grid(
 if ((props.dataSource.type || 'raw') === 'raw') {
   watch(() => props.dataSource.data,
     (newData) => {
-      console.log('watch triggered')
       grid.loadRawData(newData)
     },
     {
@@ -124,12 +123,18 @@ grid.getData()
               </div>
 
               <div class="search">
-                <input type="text" ref="txtSearch" @keypress.enter="search(this.$refs.txtSearch.value)" />
-                <button @click="search(this.$refs.txtSearch.value)">Search</button>
-                <span class="link" @click="() => {
+                <div>
+                  <input type="text" ref="txtSearch" @keypress.enter="search(this.$refs.txtSearch.value)" />
+                </div>
+                <div>
+                  <button @click="search(this.$refs.txtSearch.value)">
+                    <font-awesome-icon :icon="['fas', 'magnifying-glass']" />
+                  </button>
+                </div>
+                <div class="link" @click="() => {
                   this.$refs.txtSearch.value = null
                   search()
-                }">Clear</span>
+                }">Clear</div>
               </div>
             </div>
           </td>
@@ -238,6 +243,17 @@ grid.getData()
 </template>
 
 <style lang="scss" scoped>
+  $base-color: #eee;
+  $darker-color: darken($base-color, 20);
+  $very-dark-color: darken($base-color, 30);
+
+  input[type='text'] {
+    border: 1px solid #aaa;
+    height: 2rem;
+    margin: 0.5rem;
+    padding: 0.2rem 0.5rem;
+  }
+
   .link:hover {
     cursor: pointer;
   }
@@ -273,7 +289,7 @@ grid.getData()
   }
 
   .title-container {
-    background-color: #eee;
+    background-color: $base-color;
     >div {
       display: flex;
       justify-content: space-between;
@@ -281,6 +297,27 @@ grid.getData()
       .title {
         font-size: 2rem;
         font-weight: bold;
+      }
+    }
+  }
+
+  .search {
+    display: grid;
+    grid-template-columns: auto auto auto;
+
+    div {
+      margin: auto;
+
+      input[type="text"] {
+        margin-right:0;
+      }
+
+      button {
+        border-radius: 0 0.4rem 0.4rem 0;
+        margin-left:0;
+        margin-right: .5rem;
+        background-color: $very-dark-color;
+        color: $base-color;
       }
     }
   }
@@ -293,7 +330,7 @@ grid.getData()
   .pager {
     display: flex;
     justify-content: center;
-    background-color: #eee;
+    background-color: $base-color;
     .page-number {
       border:1px solid transparent;
       width: 2rem;
@@ -302,11 +339,11 @@ grid.getData()
       cursor: pointer;
     }
     .active {
-      background-color: #aaa;
+      background-color: $very-dark-color;
       color: #fff
     }
     .page-number:hover {
-      background-color: #ddd;
+      background-color: $darker-color;
     }
     .arrow {
       font-size: x-large;
