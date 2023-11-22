@@ -19,7 +19,7 @@ const demoRoutes = routes.filter(_ => _.path.startsWith('/demos/'))
   </main>
 </template>
 
-<style scoped lang="scss">
+<style scoped>
   #appTitle {
     margin-bottom: 1rem;
     color: #555
@@ -37,18 +37,6 @@ const demoRoutes = routes.filter(_ => _.path.startsWith('/demos/'))
   }
   .nav-link:last-child {
     border-right:none;
-  }
-
-  .grid-style {
-    min-width: 70rem;
-    height: 800px;
-    margin: 2rem auto 4rem;
-  }
-
-  input[type='text'] {
-    border: 1px solid #aaa;
-    height: 2rem;
-    margin: 0.5rem;
   }
 </style>
 
@@ -68,6 +56,18 @@ const demoRoutes = routes.filter(_ => _.path.startsWith('/demos/'))
     margin: 0.5rem;
     line-height: 2rem;
     padding:0.2rem 1rem;
+  }
+
+  input[type='text'] {
+    border: 1px solid #aaa;
+    height: 2rem;
+    margin: 0.5rem;
+  }
+
+  .grid-style {
+    min-width: 70rem;
+    height: 800px;
+    margin: 2rem auto 4rem;
   }
 
   .title-container {
