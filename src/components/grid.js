@@ -75,14 +75,6 @@ class Grid {
   static strIsNullOrWhitespace = (value) => value === null || value === undefined || value.trim() === ''
 
   // public methods
-  sortRecords = async (records, sort) => {
-    const compare = sort.direction === this.#_constants.directions.ascending
-      ? (a, b) => a[sort.field] > b[sort.field] ? 1 : a[sort.field] < b[sort.field] ? -1 : 0
-      : (a, b) => a[sort.field] < b[sort.field] ? 1 : a[sort.field] > b[sort.field] ? -1 : 0
-
-    await records.sort(compare)
-  }
-
   sort = (column) => {
     column.sortDirection =
       column.sortDirection === this.#_constants.directions.ascending
@@ -92,10 +84,7 @@ class Grid {
           : this.#_constants.directions.ascending
 
     this.sorter = column.sortDirection
-      ? {
-          field: column.field,
-          direction: column.sortDirection
-        }
+      ? { field: column.field, direction: column.sortDirection }
       : {}
 
     // reset the other columns
