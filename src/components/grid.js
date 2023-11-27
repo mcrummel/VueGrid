@@ -84,13 +84,12 @@ class Grid {
   }
 
   sort = (column) => {
-    const { sortDirection } = column
     column.sortDirection =
-        sortDirection === this.#_constants.directions.ascending
-          ? this.#_constants.directions.descending
-          : sortDirection === this.#_constants.directions.descending
-            ? null
-            : this.#_constants.directions.ascending
+      column.sortDirection === this.#_constants.directions.ascending
+        ? this.#_constants.directions.descending
+        : column.sortDirection === this.#_constants.directions.descending
+          ? null
+          : this.#_constants.directions.ascending
 
     this.sorter = column.sortDirection
       ? {
