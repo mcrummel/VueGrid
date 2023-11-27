@@ -98,6 +98,13 @@ class Grid {
           direction: column.sortDirection
         }
       : {}
+
+    // reset the other columns
+    for (const c of this.columns.value) {
+      if (c.field !== column.field) {
+        c.sortDirection = null
+      }
+    }
   }
 
   clearSorts = () => this.columns.value.forEach(c => {
