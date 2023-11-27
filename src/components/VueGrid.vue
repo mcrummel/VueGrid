@@ -106,6 +106,14 @@ const search = async (searchValue) => {
   }
 }
 
+const initialSortColumn = grid.columns.value.find(_ => _.sortDirection)
+if (initialSortColumn) {
+  grid.sorter = {
+    field: initialSortColumn.field,
+    direction: initialSortColumn.sortDirection
+  }
+}
+
 // load data on created
 grid.getData()
 </script>
@@ -150,7 +158,10 @@ grid.getData()
         <!-- Column headers -->
         <tr>
           <th v-for="column in grid.columns.value" :key="column.index"
-            @click="grid.sort(column)"
+            @click="async () => {
+              grid.sort(column)
+              await grid.getData()
+            }"
             :class="column.hidden ? 'hidden' : ''">
             {{ Grid.formatTitle(column) }}
             <span v-if="column.sortDirection === 'ASC'">&#x2191;</span>
@@ -192,9 +203,9 @@ grid.getData()
 
               <div>
                 <span v-if="selectedPage.pageNumber > 1"
-                  class="page-number arrow"
+                  class="page-number"
                   @click="grid.previousPage()">
-                  &#x2190;
+                  <font-awesome-icon :icon="['fas', 'chevron-left']" />
                 </span>
 
                 <span v-if="firstVisiblePage.pageNumber > 1"
@@ -222,9 +233,9 @@ grid.getData()
                 </span>
 
                 <span v-if="selectedPage.pageNumber < lastPage.pageNumber"
-                  class="page-number arrow"
+                  class="page-number"
                   @click="grid.nextPage()">
-                  &#x2192;
+                  <font-awesome-icon :icon="['fas', 'chevron-right']" />
                 </span>
               </div>
 
@@ -233,6 +244,10 @@ grid.getData()
                 <input ref="txtPageNumber" type="text" :value="selectedPage.pageNumber"
                   @keyup.enter="gotoPageByPageNumber(this.$refs.txtPageNumber.value)" />
                 <span class="link" @click="gotoPageByPageNumber(this.$refs.txtPageNumber.value)">Go</span>
+
+                <button class="refreshButton" @click="grid.getData">
+                  <font-awesome-icon :icon="['fas', 'rotate']" />
+                </button>
               </div>
             </div>
           </td>
@@ -345,10 +360,7 @@ grid.getData()
     .page-number:hover {
       background-color: $darker-color;
     }
-    .arrow {
-      font-size: x-large;
-      line-height: 1.8rem;
-    }
+
     >div {
       display: flex;
       width: 33%;
@@ -366,6 +378,10 @@ grid.getData()
         width: 2rem;
         text-align: center;
         margin: 0 0.5rem;
+      }
+
+      .refreshButton {
+        margin-left:2rem;
       }
     }
   }

@@ -1,13 +1,16 @@
 <script setup>
 import { ref } from 'vue'
+import Grid from './grid'
 
 const props = defineProps({
   inputs: { type: Array },
   data: { type: Array }
 })
 
+const fields = props.inputs.filter(_ => _.columnType !== 'command')
+
 const emit = defineEmits(['save', 'cancel', 'load'])
-const valueRefs = ref([])
+const valueRefs = ref([], { deep: true })
 
 const saveRecord = (e) => {
   const record = props.data
@@ -24,11 +27,11 @@ const saveRecord = (e) => {
     <div>{{props.id}}</div>
     <div id="frmEditableTable">
         <div class="form-container">
-            <div v-for="{ name, title } in props.inputs" :key="name"
+            <div v-for="{ field, title, columnType, editable } in fields" :key="field"
                 class="item">
                 <div>
-                    <label :for="name">{{ title }}</label>
-                    <input type="text" :name="name" ref="valueRefs" :value="props.data[name]" />
+                    <label :for="field">{{ Grid.formatTitle({ field, title, columnType }) }}</label>
+                    <input type="text" :name="field" ref="valueRefs" :value="props.data[field]" :readonly="editable === false" />
                 </div>
             </div>
         </div>
@@ -45,6 +48,10 @@ const saveRecord = (e) => {
         border-top: 2px inset #888;
         border-left: 2px inset #888;
         padding: 0.5rem;
+
+        input[readonly] {
+            background-color: #ededed;
+        }
     }
     .form-container {
         display: grid;

@@ -1,6 +1,6 @@
 <script setup>
 import VueGrid from '../components/VueGrid.vue'
-import EditRecord from './EditRecord.vue'
+import EditRecord from '../components/EditRecord.vue'
 import { ref } from 'vue'
 
 // data and functions related to data
@@ -18,6 +18,21 @@ const editData = ref([{
   postalCode: '12345'
 }])
 
+// grid related properties and functions
+const columns = [
+  { field: 'editCommand', columnType: 'command' },
+  { field: 'id', columnType: Number, editable: false, sortDirection: 'DESC' },
+  { field: 'firstName', filterable: true },
+  { field: 'lastName', filterable: true },
+  { field: 'phoneNumber' },
+  { field: 'address' },
+  { field: 'city', filterable: true },
+  { field: 'state', filterable: true },
+  { field: 'postalCode' }
+]
+
+const currentRecord = ref({})
+
 const saveData = (record) => {
   if (!record.id) {
     record.id = getNewIndex()
@@ -30,64 +45,39 @@ const saveData = (record) => {
   currentRecord.value = {}
 }
 
-// edit form related objects
-const formInputs = [
-  { name: 'firstName', title: 'First Name' },
-  { name: 'lastName', title: 'Last Name' },
-  { name: 'phoneNumber', title: 'Phone Number' },
-  { name: 'address', title: 'Address' },
-  { name: 'city', title: 'City' },
-  { name: 'state', title: 'State' },
-  { name: 'postalCode', title: 'Postal Code' }
-]
+const editRecord = (row) => {
+  currentRecord.value = row
+}
 
-const currentRecord = ref({})
-
-const showEditForm = (record) => {
-  console.log(record)
-  currentRecord.value = record
+const deleteRecord = (recordId) => {
+  const index = editData.value.findIndex(_ => _.id === recordId)
+  editData.value.splice(index, 1)
 }
 </script>
 
 <template>
-
-  <Transition name="slide-fade">
-    <section v-if="currentRecord.id >= 0">
-      <EditRecord
-      :inputs="formInputs"
-      :data="currentRecord"
-      @save="saveData"
-      @cancel="showEditForm({})" />
-    </section>
-  </Transition>
-
   <VueGrid
     name="ContactsGrid"
     title="Editable Table"
     class="grid-style"
     :dataSource="{ data: editData }"
-    :columns="[
-      { field: 'editCommand', columnType: 'Command' },
-      { field: 'id', columnType: Number },
-      { field: 'firstName', filterable: true },
-      { field: 'lastName', filterable: true },
-      { field: 'phoneNumber' },
-      { field: 'address' },
-      { field: 'city', filterable: true },
-      { field: 'state', filterable: true },
-      { field: 'postalCode' }
-    ]">
+    :columns="columns">
     <template #CommandBar>
-      <button v-if="currentRecord.id === undefined" @click="showEditForm({ id: 0 })">
-        <font-awesome-icon :icon="['fas', 'plus']" v-if="currentRecord.id === undefined" @click="showEditForm({ id: 0 })" />
+      <button >
+        <font-awesome-icon :icon="['fas', 'plus']" />
       </button>
+      <EditRecord
+        :inputs="columns"
+        :data="currentRecord"
+        @save="saveData"
+        @cancel="currentRecord = {}" />
     </template>
     <template #editCommand="row">
       <div class="edit-column">
-        <button @click="showEditForm(row)">
+        <button @click="editRecord(row)">
           <font-awesome-icon :icon="['fas', 'pencil']" />
         </button>
-        <button>
+        <button @click="deleteRecord(row.id)">
           <font-awesome-icon :icon="['fas', 'trash-can']" />
         </button>
       </div>

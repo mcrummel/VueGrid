@@ -83,7 +83,7 @@ class Grid {
     await records.sort(compare)
   }
 
-  sort = async (column) => {
+  sort = (column) => {
     const { sortDirection } = column
     column.sortDirection =
         sortDirection === this.#_constants.directions.ascending
@@ -98,8 +98,6 @@ class Grid {
           direction: column.sortDirection
         }
       : {}
-
-    await this.getData()
   }
 
   clearSorts = () => this.columns.value.forEach(c => {
