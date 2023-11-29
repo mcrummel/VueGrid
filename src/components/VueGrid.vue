@@ -245,7 +245,7 @@ grid.getData()
                   @keyup.enter="gotoPageByPageNumber(this.$refs.txtPageNumber.value)" />
                 <span class="link" @click="gotoPageByPageNumber(this.$refs.txtPageNumber.value)">Go</span>
 
-                <button class="refreshButton" @click="grid.getData">
+                <button class="refreshButton" @click="grid.getData()">
                   <font-awesome-icon :icon="['fas', 'rotate']" />
                 </button>
               </div>
