@@ -78,5 +78,4 @@ const options = [
   { label: 'Wisconsin', code: 'WI' },
   { label: 'Wyoming', code: 'WY' }
 ]
-
 </script>

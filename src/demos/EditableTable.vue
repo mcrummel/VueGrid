@@ -52,10 +52,10 @@ exampleData.value.push({
   city: 'Springfield',
   state: 'AK',
   postalCode: '12345',
-  addDate: new Date()
+  addDate: new Date('2023-11-01T00:00:00')
 })
 
-// grid configuration
+// validators
 const requiredTextFieldValidator = {
   assert: (value) => value && value.toString().length > 0,
   message: (title) => `${title} is required`
@@ -64,6 +64,8 @@ const phoneNumberValidator = {
   assert: (value) => value && value.toString().length === 10,
   message: (title) => `${title} must be at least ten characters`
 }
+
+// formatters
 const formatDate = (value) => {
   return value && value.toLocaleDateString
     ? value.toLocaleDateString('en-us')
@@ -102,7 +104,7 @@ const formatPhoneNumber = (value) => {
         @cancel="cancel()"
       >
         <template #state="{ value, updateValue }">
-          <StatesSelect name="state" class="drop-down" :value="value" :onInput="updateValue"  />
+          <StatesSelect name="state" class="drop-down" :value="value" :onInput="updateValue" />
         </template>
         <template #addDate="{ value, updateValue }">
           <DateInput name="addDate" :value="value" :on-change="updateValue" />
