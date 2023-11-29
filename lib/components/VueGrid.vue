@@ -1,5 +1,5 @@
 <script setup>
-import Grid from './grid.js'
+import Grid from '../module/grid.js'
 import { computed, watch } from 'vue'
 
 const props = defineProps({
@@ -7,9 +7,6 @@ const props = defineProps({
     type: String
   },
   title: {
-    type: String
-  },
-  class: {
     type: String
   },
   dataSource: {
@@ -119,7 +116,7 @@ grid.getData()
 </script>
 
 <template>
-  <div :class="props.class">
+  <div>
     <table :id="props.name" class="grid">
       <thead>
         <!-- Title / Filter -->
@@ -162,7 +159,7 @@ grid.getData()
               grid.sort(column)
               await grid.getData()
             }"
-            :class="column.hidden ? 'hidden' : ''">
+            :v-show="!column.hidden">
             {{ Grid.formatTitle(column) }}
             <span v-if="column.sortDirection === 'ASC'">&#x2191;</span>
             <span v-else-if="column.sortDirection === 'DESC'">&#x2193;</span>
@@ -181,7 +178,7 @@ grid.getData()
       <tbody v-show="!grid.loading.value">
         <tr v-for="row in grid.data.value" :key="row.id">
           <td v-for="column in grid.columns.value" :key="column.field"
-            :class="column.hidden ? 'hidden' : ''">
+            :v-show="!column.hidden">
             <div v-if="$slots[column.field]">
               <slot :name="column.field" v-bind="row"></slot>
             </div>
@@ -257,7 +254,7 @@ grid.getData()
   </div>
 </template>
 
-<style lang="scss" scoped>
+<style scoped lang="scss">
   $base-color: #eee;
   $darker-color: darken($base-color, 20);
   $very-dark-color: darken($base-color, 30);
@@ -272,11 +269,8 @@ grid.getData()
   .link:hover {
     cursor: pointer;
   }
-  .hidden {
-    display: none;
-  }
   .loading {
-    background: url('./assets/loading.gif') no-repeat;
+    background: url('../assets/loading.gif') no-repeat;
     background-size: 100%;
   }
   table.grid {

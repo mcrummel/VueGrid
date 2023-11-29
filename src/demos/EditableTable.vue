@@ -1,6 +1,5 @@
 <script setup>
-import VueGrid from '../components/VueGrid.vue'
-import EditRecord from '../components/EditRecord.vue'
+import { VueGrid, EditGrid } from '../../lib/main.js'
 import StatesSelect from '../components/UsStateSelect.vue'
 import DateInput from '../components/DateInput.vue'
 import { ref, computed } from 'vue'
@@ -97,7 +96,7 @@ const formatPhoneNumber = (value) => {
       <button @click="showForm = !showForm">
         <font-awesome-icon :icon="['fas', formToggleClass]" />
       </button>
-      <EditRecord id="edit-form" v-show="showForm"
+      <EditGrid id="edit-form" v-show="showForm"
         :inputs="grid.columns.value"
         :data="currentRecord"
         @save="saveData"
@@ -109,7 +108,7 @@ const formatPhoneNumber = (value) => {
         <template #addDate="{ value, updateValue }">
           <DateInput name="addDate" :value="value" :on-change="updateValue" />
         </template>
-      </EditRecord>
+      </EditGrid>
     </template>
     <template #editCommand="row">
       <div class="edit-column">

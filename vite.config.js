@@ -1,3 +1,4 @@
+import { resolve } from 'path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
@@ -21,6 +22,21 @@ export default defineConfig({
           proxy.on('proxyRes', (proxyRes, req, _res) => {
             console.log('Received Response from the Target:', proxyRes.statusCode, req.url)
           })
+        }
+      }
+    }
+  },
+  build: {
+    lib: {
+      entry: resolve(__dirname, 'lib/main.js'),
+      name: 'VueGrid',
+      fileName: 'vue-grid'
+    },
+    rollupOptions: {
+      external: ['vue'],
+      output: {
+        globals: {
+          vue: 'Vue'
         }
       }
     }

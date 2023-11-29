@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue'
-import Grid from './grid'
+import Grid from '../module/grid'
 
 const props = defineProps({
   inputs: { type: Array },

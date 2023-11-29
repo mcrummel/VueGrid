@@ -1,5 +1,5 @@
 <script setup>
-import VueGrid from '../components/VueGrid.vue'
+import { VueGrid } from '../../lib/main.js'
 
 const formatDate = (value) => {
   const d = new Date(value)

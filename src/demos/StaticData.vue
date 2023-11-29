@@ -1,5 +1,5 @@
 <script setup>
-import VueGrid from '../components/VueGrid.vue'
+import { VueGrid } from '../../lib/main.js'
 import { ref } from 'vue'
 
 const testData = ref([])

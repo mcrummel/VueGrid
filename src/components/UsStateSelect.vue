@@ -10,14 +10,13 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue'
+import { defineProps } from 'vue'
 
 const props = defineProps({
   name: String,
   value: String,
   onInput: Function
 })
-defineEmits(['update:modelValue'])
 
 const options = [
   { label: 'Alabama', code: 'AL' },
