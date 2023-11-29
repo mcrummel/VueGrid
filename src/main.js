@@ -13,21 +13,18 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 /* import font awesome icon component */
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import {
-  faPlus,
-  faMagnifyingGlass,
-  faPencil,
-  faTrashCan,
-  faRotate,
-  faChevronRight,
-  faChevronLeft
-} from '@fortawesome/free-solid-svg-icons'
-library.add(
-  faPlus,
+  faPlus, faMinus,
   faMagnifyingGlass,
   faPencil, faTrashCan,
   faRotate,
-  faChevronRight,
-  faChevronLeft
+  faChevronRight, faChevronLeft
+} from '@fortawesome/free-solid-svg-icons'
+library.add(
+  faPlus, faMinus,
+  faMagnifyingGlass,
+  faPencil, faTrashCan,
+  faRotate,
+  faChevronRight, faChevronLeft
 )
 
 const router = createRouter({
