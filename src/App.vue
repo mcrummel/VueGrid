@@ -59,9 +59,16 @@ const demoRoutes = routes.filter(_ => _.path.startsWith('/demos/'))
     padding:0.2rem 1rem;
   }
 
-  input[type='text'] {
+  input {
     border: 1px solid #aaa;
     height: 2rem;
+    margin: 0.5rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  select {
+    border: 1px solid #aaa;
+    height: 2.5rem;
     margin: 0.5rem;
     padding: 0.2rem 0.5rem;
   }
