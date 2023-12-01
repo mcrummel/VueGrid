@@ -5,11 +5,10 @@ import { IColumn } from '../interfaces/IColumn'
 import { IDataSet } from '../interfaces/IDataSet'
 import { IPage, IPager } from '../interfaces/IPager'
 import { ISorter } from '../interfaces/ISorter'
-import { DataSourceTypes, Directions, Operators } from './Constants'
+import { Directions, Operators } from './Constants'
 import { IFilter } from '../interfaces/IFilter'
 import { IGrid } from '../interfaces/IGrid'
 import { RawDataSource } from './RawDataSource'
-import { OdataDataSource } from './OdataDataSource'
 
 
 class Grid implements IGrid {
