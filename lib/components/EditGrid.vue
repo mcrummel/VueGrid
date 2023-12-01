@@ -1,31 +1,38 @@
-<script setup>
-import { ref, watch } from 'vue'
-import Grid from '../module/grid'
+<script setup lang="ts">
+import { ref, watch, PropType } from 'vue'
+import { Grid } from '../classes/Grid'
+import { IColumn } from '../interfaces/IColumn';
 
 const props = defineProps({
-  inputs: { type: Array },
-  data: { type: Array }
+  inputs: { 
+    type: Array as PropType<IColumn[]>,
+    required: true
+  },
+  data: { 
+    type: Array as PropType<object[]>,
+    required: true
+  }
 })
 
-const inputs = props.inputs.filter(_ => _.columnType !== 'command').map(input => {
+const inputs:IColumn[] = props.inputs.filter(_ => _.columnType !== 'command').map(input => {
   return {
     validator: {
-      assert: (value) => true,
-      message: (title) => ''
+      assert: (value: unknown) => true, // eslint-disable-line @typescript-eslint/no-unused-vars
+      message: (title: string) => '' // eslint-disable-line @typescript-eslint/no-unused-vars
     },
     ...input
   }
 })
 
 const emit = defineEmits(['save', 'cancel', 'load'])
-const form = ref({}, { deep: true })
+const form = ref<object>({})
 
-const loadForm = (data) => {
+const loadForm = (data: object[]) => {
   if (Object.keys(data).length === 0) {
     form.value = {}
   } else {
     for (const { field } of inputs) {
-      form.value[field] = props.data[field]
+      (form.value[field as keyof object] as unknown) = props.data[field as keyof object]
     }
   }
 
@@ -33,12 +40,12 @@ const loadForm = (data) => {
     removeValidationError(field)
   }
 }
-watch(() => props.data, loadForm, { deep: true })
+watch(() => props.data , loadForm, { deep: true })
 
-const saveRecord = (e) => {
+const saveRecord = () => {
   let isValid = true
   for (const { field, validator } of inputs) {
-    const value = form.value[field]
+    const value = form.value[field as keyof object]
     if (validator && !validator.assert(value)) {
       isValid = false
       addValidationError(field)
@@ -48,31 +55,31 @@ const saveRecord = (e) => {
   if (isValid) { emit('save', { ...form.value }) }
 }
 
-const addValidationError = (field) => {
+const addValidationError = (field: string) => {
   const ele = document.querySelector(`[name="${field}"]`)
 
   if (ele) {
-    ele.closest('.form-item').classList.add('validation-error')
+    ele.closest('.form-item')?.classList.add('validation-error')
   }
 }
 
-const removeValidationError = (field) => {
+const removeValidationError = (field: string) => {
   const ele = document.querySelector(`[name="${field}"]`)
 
   if (ele) {
-    ele.closest('.form-item').classList.remove('validation-error')
+    ele.closest('.form-item')?.classList.remove('validation-error')
   }
 }
 
-const getEditorType = (input) => {
+const getEditorType = (input: IColumn) => {
   const rules = [
-    { test: _ => _.editable === false, value: 'hidden' },
-    { test: _ => _.columnType === Number, value: 'number' },
-    // default
-    { test: _ => true, value: 'text' }
+    { test: (_: IColumn) => _.editable === false, value: 'hidden' },
+    { test: (_: IColumn) => _.columnType === 'number', value: 'number' },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- required for signature
+    { test: (_: IColumn) => true, value: 'text' } /*DEFAULT*/
   ]
 
-  return rules.find(_ => _.test(input)).value
+  return rules.find(_ => _.test(input))?.value
 }
 
 // mounted
@@ -92,19 +99,21 @@ loadForm(props.data)
                         <span v-if="$slots[input.field]" >
                             <slot :name="input.field"
                                 v-bind="{
-                                    value: form[input.field],
-                                    updateValue: (value) => { form[input.field] = value }
+                                    value: form[input.field as keyof object],
+                                    updateValue: (value: unknown) => { 
+                                      (form[input.field as keyof object] as unknown) = value 
+                                    }
                                 }" />
                         </span>
                         <span v-else>
-                            <input :type="getEditorType(input)" v-model="form[input.field]"
+                            <input :type="getEditorType(input)" v-model="form[input.field as keyof object]"
                                 :name="input.field"
                                 :readonly="input.readonly === true" />
                         </span>
                     </div>
 
                     <div class="validation-error-message">
-                        {{ input.validator.message(Grid.formatTitle(input)) }}
+                        {{ input.validator?.message(Grid.formatTitle(input) || '') }}
                     </div>
                 </div>
             </div>
@@ -173,3 +182,4 @@ loadForm(props.data)
         }
     }
 </style>
+../classes/Grid

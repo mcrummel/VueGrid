@@ -1,10 +1,19 @@
-<script setup>
-import { VueGrid } from '../../lib/main.js'
+<script setup lang="ts">
+import { VueGrid, OdataDataSource } from '../../lib/main'
 
 const formatDate = (value) => {
   const d = new Date(value)
   return `${d.getUTCMonth() + 1}/${d.getUTCDate()}/${d.getUTCFullYear()}`
 }
+
+const dataSource = new OdataDataSource('http://localhost:5173/api/WHOSIS_000001',
+  (response) => {
+    return {
+      data: response.value,
+      total: response['@odata.count']
+    }
+  }
+)
 </script>
 
 <template>
@@ -12,13 +21,10 @@ const formatDate = (value) => {
       name="IndicatorGrid"
       title="Life Expectancy at Birth (Odata)"
       class="grid-style"
-      :dataSource="{
-        type: 'odata',
-        rootUrl: 'http://localhost:5173/api/WHOSIS_000001'
-      }"
+      :dataSource="dataSource"
       :columns="[
         { field: 'Id', hidden: true },
-        { field: 'TimeDim', title: 'Year', columnType: Number, filterable: true },
+        { field: 'TimeDim', title: 'Year', columnType: 'number', filterable: true },
         { field: 'SpatialDim', title: 'Country', filterable: true },
         { field: 'ParentLocation', filterable: true },
         {
@@ -33,11 +39,11 @@ const formatDate = (value) => {
             }
           }
         },
-        { field: 'Value', title: 'Age', columnType: Number },
-        { field: 'NumericValue', columnType: Number, hidden: true },
-        { field: 'TimeDimensionBegin', title: 'Time Begin', columnType: Date, format: formatDate },
-        { field: 'TimeDimensionBegin', title: 'Unformatted Time Begin', columnType: Date },
-        { field: 'TimeDimensionEnd', title: 'Time End', columnType: Date, format: formatDate },
+        { field: 'Value', title: 'Age', columnType: 'number' },
+        { field: 'NumericValue', columnType: 'number', hidden: true },
+        { field: 'TimeDimensionBegin', title: 'Time Begin', columnType: 'date', format: formatDate },
+        { field: 'TimeDimensionBegin', title: 'Unformatted Time Begin', columnType: 'date' },
+        { field: 'TimeDimensionEnd', title: 'Time End', columnType: 'date', format: formatDate },
         /*
         Available fields we aren't loading.
         These fields will not be included in the odata query
@@ -59,11 +65,5 @@ const formatDate = (value) => {
         { field: 'Comments' },
         { field: 'Date' },
         */
-      ]"
-      :mapResponse="(response) => {
-        return {
-          data: response.value,
-          total: response['@odata.count']
-        }
-      }" />
+      ]" />
 </template>

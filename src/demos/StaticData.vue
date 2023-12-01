@@ -1,8 +1,9 @@
-<script setup>
-import { VueGrid } from '../../lib/main.js'
+<script setup lang="js">
+import { VueGrid, RawDataSource } from '../../lib/main'
 import { ref } from 'vue'
 
 const testData = ref([])
+const dataSource = ref(new RawDataSource(testData))
 const testDataLimit = ref(0)
 
 // get all records from the service to populate DimensionGrid's data object
@@ -36,7 +37,7 @@ loadInitialData()
         name="DimensionGrid"
         title="Dimension Values by Country (Static Data)"
         class="grid-style"
-        :dataSource="{ data: testData }"
+        :dataSource="dataSource"
         :columns="[
           { field: 'Code', filterable: true },
           { field: 'Title', filterable: true },

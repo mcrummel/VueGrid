@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { resolve } from 'path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -5,6 +6,26 @@ import vue from '@vitejs/plugin-vue'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  build: {
+    lib: {
+      entry: resolve(__dirname, 'lib/main.ts'),
+      name: 'VueGrid',
+      // the proper extensions will be added
+      fileName: 'vue-grid'
+    },
+    rollupOptions: {
+      // make sure to externalize deps that shouldn't be bundled
+      // into your library
+      external: ['vue'],
+      // Provide global variables to use in the UMD build
+      // for externalized deps
+      output: {
+        globals: {
+          vue: 'Vue'
+        }
+      }
+    }
+  },
   server: {
     proxy: {
       '/api': {
@@ -22,21 +43,6 @@ export default defineConfig({
           proxy.on('proxyRes', (proxyRes, req, _res) => {
             console.log('Received Response from the Target:', proxyRes.statusCode, req.url)
           })
-        }
-      }
-    }
-  },
-  build: {
-    lib: {
-      entry: resolve(__dirname, 'lib/main.js'),
-      name: 'VueGrid',
-      fileName: 'vue-grid'
-    },
-    rollupOptions: {
-      external: ['vue'],
-      output: {
-        globals: {
-          vue: 'Vue'
         }
       }
     }

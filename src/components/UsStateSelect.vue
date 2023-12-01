@@ -1,22 +1,16 @@
-<template>
-  <select :name="name" :value="props.value" @input="props.onInput($event.target.value)">
-      <option v-for="{ label, code } of options" :key="code"
-          :value="code"
-          :selected="code === props.value"
-      >
-          {{ label }}
-      </option>
-  </select>
-</template>
-
-<script setup>
-import { defineProps } from 'vue'
+<script setup lang="ts">
+import { PropType } from 'vue';
 
 const props = defineProps({
   name: String,
   value: String,
-  onInput: Function
+  onInput: {
+    type: Function as PropType<(value:unknown) => void>,
+    required: true
+  }
 })
+
+const handleInput = (e:Event) => props.onInput((e.target as HTMLInputElement).value)
 
 const options = [
   { label: 'Alabama', code: 'AL' },
@@ -78,3 +72,14 @@ const options = [
   { label: 'Wyoming', code: 'WY' }
 ]
 </script>
+
+<template>
+  <select :name="name" :value="props.value" @input="handleInput($event)">
+      <option v-for="{ label, code } of options" :key="code"
+          :value="code"
+          :selected="code === props.value"
+      >
+          {{ label }}
+      </option>
+  </select>
+</template>

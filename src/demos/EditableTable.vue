@@ -1,5 +1,5 @@
-<script setup>
-import { VueGrid, EditGrid } from '../../lib/main.js'
+<script setup lang="js">
+import { VueGrid, EditGrid, RawDataSource } from '../../lib/main'
 import StatesSelect from '../components/UsStateSelect.vue'
 import DateInput from '../components/DateInput.vue'
 import { ref, computed } from 'vue'
@@ -12,6 +12,7 @@ const getNewIndex = () => ++lastIndex
 const currentRecord = ref({})
 const exampleData = ref([])
 const showForm = ref(false)
+
 const formToggleClass = computed(() => showForm.value ? 'minus' : 'plus')
 
 // grid functions
@@ -53,6 +54,7 @@ exampleData.value.push({
   postalCode: '12345',
   addDate: new Date('2023-11-01T00:00:00')
 })
+const dataSource = new RawDataSource(exampleData)
 
 // validators
 const requiredTextFieldValidator = {
@@ -79,7 +81,7 @@ const formatPhoneNumber = (value) => {
 
 <template>
   <VueGrid name="ContactsGrid" title="Editable Table" class="grid-style"
-    :dataSource="{ data: exampleData }"
+    :dataSource="dataSource"
     :columns="[
       { field: 'editCommand', columnType: 'command' },
       { field: 'id', columnType: Number, readonly: true, sortDirection: 'DESC' },

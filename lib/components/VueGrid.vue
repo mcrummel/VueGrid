@@ -1,6 +1,12 @@
-<script setup>
-import Grid from '../module/grid.js'
-import { computed, watch } from 'vue'
+<script setup lang="ts">
+import { Grid } from '../classes/Grid'
+import { IGrid } from '../interfaces/IGrid'
+import { IGridDataSource } from '../interfaces/IGridDataSource'
+import { ComputedRef, ref, computed, PropType, watch } from 'vue'
+import { IPage } from '../interfaces/IPager'
+import { IColumn } from '../interfaces/IColumn';
+import { Utility } from '../classes/Utility';
+import { RawDataSource } from '../main'
 
 const props = defineProps({
   name: {
@@ -10,14 +16,11 @@ const props = defineProps({
     type: String
   },
   dataSource: {
-    type: Object,
+    type: Object as PropType<IGridDataSource>,
     required: true
   },
-  mapResponse: {
-    type: Function
-  },
   columns: {
-    type: Array,
+    type: Array as PropType<IColumn[]>,
     required: true
   },
   pageSize: {
@@ -25,10 +28,14 @@ const props = defineProps({
   }
 })
 
+// refs
+const txtSearch = ref<HTMLInputElement | null>(null)
+const txtPageNumber = ref<HTMLInputElement | null>(null)
+
 // computed
 const totalRows = computed(() => grid.pager.value.total)
 const pageStart = computed(() => grid.pager.value.index)
-const selectedPage = computed(() => pages.value.find(p => p.selected))
+const selectedPage:ComputedRef<IPage | undefined> = computed(() => pages.value.find(p => p.selected))
 const firstPage = computed(() => pages.value[0])
 const lastPage = computed(() => pages.value.slice(-1)[0])
 const firstVisiblePage = computed(() => visiblePages.value[0])
@@ -41,7 +48,7 @@ const pageEnd = computed(() => {
   return end <= total ? end : total
 })
 
-const pages = computed(() => {
+const pages:ComputedRef<IPage[]> = computed(() => {
   return grid.pager.value.pages
 })
 
@@ -49,7 +56,7 @@ const visiblePages = computed(() => {
   if (pages.value.length <= 7) { return pages.value }
 
   const results = []
-  const { pageNumber } = selectedPage.value
+  const pageNumber = selectedPage.value?.pageNumber || 0
 
   const startIndex = pageNumber < 4
     ? 0
@@ -65,45 +72,51 @@ const visiblePages = computed(() => {
 })
 
 // object instantiation
-const grid = new Grid(
+const grid:IGrid = new Grid(
   props.dataSource,
   props.columns,
-  props.mapResponse,
   props.pageSize
 )
 
-if ((props.dataSource.type || 'raw') === 'raw') {
-  watch(() => props.dataSource.data,
-    (newData) => {
-      grid.loadRawData(newData)
-    },
-    {
-      deep: true
-    })
+if (props.dataSource instanceof RawDataSource) {
+  watch(() => props.dataSource, async() => await grid.getData(), { deep: true})
 }
 
 // formatters
-const applyCustomFormatting = (field, row, formatter) =>
-  formatter ? formatter(row[field], row) : row[field]
+const applyCustomFormatting = (
+  field:string, 
+  row:object, 
+  formatter?:(value:unknown, record:object) => unknown
+) => {
+  const value = row[field as keyof object]
+  return formatter ? formatter(value, row) : value
+}
+  
 
 // functions
-const gotoPageByPageNumber = async (pageNumber) => {
+const gotoPageByPageNumber = async (pageNumber:number) => {
   const page = pageNumber < 1
     ? pages.value[0]
     : pageNumber > pages.value.length
       ? pages.value.slice(-1)[0]
       : pages.value.find(p => p.pageNumber === Number(pageNumber))
 
-  await grid.gotoPage(page)
-}
-
-const search = async (searchValue) => {
-  if (!searchValue || !isNaN(searchValue) || searchValue.length >= 3) {
-    await grid.filterData(searchValue)
+  if (page) { 
+    await grid.gotoPage(page) 
   }
 }
 
-const initialSortColumn = grid.columns.value.find(_ => _.sortDirection)
+const search = async (searchValue?:string|number) => {
+  if (
+    searchValue !== undefined &&
+    (
+      (typeof searchValue === 'number' && !isNaN(searchValue)) ||
+      (!Utility.strIsNullOrWhitespace(searchValue as string))
+    )
+  ) { await grid.filterData(searchValue) }
+}
+
+const initialSortColumn = grid.columns.value.find((_:IColumn) => _.sortDirection)
 if (initialSortColumn) {
   grid.sorter = {
     field: initialSortColumn.field,
@@ -129,15 +142,15 @@ grid.getData()
 
               <div class="search">
                 <div>
-                  <input type="text" ref="txtSearch" @keypress.enter="search(this.$refs.txtSearch.value)" />
+                  <input type="text" ref="txtSearch" @keypress.enter="search(txtSearch?.value)" />
                 </div>
                 <div>
-                  <button @click="search(this.$refs.txtSearch.value)">
+                  <button @click="search(($refs.txtSearch as HTMLInputElement).value)">
                     <font-awesome-icon :icon="['fas', 'magnifying-glass']" />
                   </button>
                 </div>
                 <div class="link" @click="() => {
-                  this.$refs.txtSearch.value = null
+                  if (txtSearch) { txtSearch.value = '' }
                   search()
                 }">Clear</div>
               </div>
@@ -154,7 +167,7 @@ grid.getData()
 
         <!-- Column headers -->
         <tr>
-          <th v-for="column in grid.columns.value" :key="column.index"
+          <th v-for="column in grid.columns.value" :key="column.field"
             @click="async () => {
               grid.sort(column)
               await grid.getData()
@@ -176,7 +189,7 @@ grid.getData()
 
       <!-- Table data -->
       <tbody v-show="!grid.loading.value">
-        <tr v-for="row in grid.data.value" :key="row.id">
+        <tr v-for="row, index in grid.data.value" :key="index">
           <td v-for="column in grid.columns.value" :key="column.field"
             :v-show="!column.hidden">
             <div v-if="$slots[column.field]">
@@ -239,8 +252,8 @@ grid.getData()
               <div>
                 Page:
                 <input ref="txtPageNumber" type="text" :value="selectedPage.pageNumber"
-                  @keyup.enter="gotoPageByPageNumber(this.$refs.txtPageNumber.value)" />
-                <span class="link" @click="gotoPageByPageNumber(this.$refs.txtPageNumber.value)">Go</span>
+                  @keyup.enter="gotoPageByPageNumber(+(txtPageNumber?.value || 0))" />
+                <span class="link" @click="gotoPageByPageNumber(+(txtPageNumber?.value || 0))">Go</span>
 
                 <button class="refreshButton" @click="grid.getData()">
                   <font-awesome-icon :icon="['fas', 'rotate']" />
