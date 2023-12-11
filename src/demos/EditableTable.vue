@@ -1,5 +1,5 @@
 <script setup lang="js">
-import { VueGrid, EditGrid, RawDataSource } from '../../lib/main'
+import { VueGrid, EditGrid, RawDataSource } from '../../lib/vue-grid'
 import StatesSelect from '../components/UsStateSelect.vue'
 import DateInput from '../components/DateInput.vue'
 import { ref, computed } from 'vue'
@@ -137,3 +137,4 @@ const formatPhoneNumber = (value) => {
   width: 92%;
 }
 </style>
+../../lib/vue-grid

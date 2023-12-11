@@ -1,11 +1,11 @@
-import { IColumn } from "../interfaces/IColumn"
-import { IFilter } from "../interfaces/IFilter"
+import { IColumn } from '../interfaces/IColumn'
+import { IFilter } from '../interfaces/IFilter'
 import { IPager } from '../interfaces/IPager'
-import { ISorter } from "../interfaces/ISorter"
-import { IGridDataSource } from "../interfaces/IGridDataSource"
-import { Utility } from "./Utility"
-import { Operators } from "./Constants" 
-import { IDataSet } from "../interfaces/IDataSet"
+import { ISorter } from '../interfaces/ISorter'
+import { IGridDataSource } from '../interfaces/IGridDataSource'
+import { Utility } from './Utility'
+import { Operators } from './Constants' 
+import { IDataSet } from '../interfaces/IDataSet'
 
 interface IOdataQuery {
   $count?: boolean,

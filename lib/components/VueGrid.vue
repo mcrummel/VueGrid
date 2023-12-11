@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { Grid } from '../classes/Grid'
-import { IGrid } from '../interfaces/IGrid'
-import { IGridDataSource } from '../interfaces/IGridDataSource'
-import { ComputedRef, ref, computed, PropType, watch } from 'vue'
-import { IPage } from '../interfaces/IPager'
+import { ComputedRef, ref, computed, PropType, watch, onMounted } from 'vue'
+import { IGridDataSource } from '../interfaces/IGridDataSource';
 import { IColumn } from '../interfaces/IColumn';
+import { IPage } from '../interfaces/IPager';
+import { IGrid } from '../interfaces/IGrid';
+import { RawDataSource } from '../classes/RawDataSource';
 import { Utility } from '../classes/Utility';
-import { RawDataSource } from '../main'
+import { Grid } from '../classes/Grid';
+
 
 const props = defineProps({
   name: {
@@ -125,7 +126,15 @@ if (initialSortColumn) {
 }
 
 // load data on created
-grid.getData()
+onMounted(() => {
+  grid.getData()
+})
+</script>
+
+<script lang="ts">
+export default {
+  name: "VueGrid"
+}
 </script>
 
 <template>
@@ -142,7 +151,11 @@ grid.getData()
 
               <div class="search">
                 <div>
-                  <input type="text" ref="txtSearch" @keypress.enter="search(txtSearch?.value)" />
+                  <input 
+                    type="text" 
+                    ref="txtSearch" 
+                    placeholder="Search..."
+                    @keypress.enter="search(txtSearch?.value)" />
                 </div>
                 <div>
                   <button @click="search(($refs.txtSearch as HTMLInputElement).value)">
@@ -392,4 +405,4 @@ grid.getData()
       }
     }
   }
-</style>
+</style>../vue-grid..

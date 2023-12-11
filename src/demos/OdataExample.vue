@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { VueGrid, OdataDataSource } from '../../lib/main'
+import { VueGrid, OdataDataSource } from '../../lib/vue-grid'
 
 const formatDate = (value) => {
   const d = new Date(value)
@@ -67,3 +67,4 @@ const dataSource = new OdataDataSource('http://localhost:5173/api/WHOSIS_000001'
         */
       ]" />
 </template>
+../../lib/vue-grid

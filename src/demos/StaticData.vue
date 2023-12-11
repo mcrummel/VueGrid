@@ -1,5 +1,5 @@
 <script setup lang="js">
-import { VueGrid, RawDataSource } from '../../lib/main'
+import { VueGrid, RawDataSource } from '../../lib/vue-grid'
 import { ref } from 'vue'
 
 const testData = ref([])
@@ -61,3 +61,4 @@ loadInitialData()
         </template>
     </VueGrid>
 </template>
+../../lib/vue-grid
