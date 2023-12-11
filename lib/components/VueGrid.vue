@@ -1,6 +1,13 @@
-<script setup>
-import Grid from './grid'
-import { computed, watch } from 'vue'
+<script setup lang="ts">
+import { ComputedRef, ref, computed, PropType, watch, onMounted } from 'vue'
+import { IGridDataSource } from '../interfaces/IGridDataSource';
+import { IColumn } from '../interfaces/IColumn';
+import { IPage } from '../interfaces/IPager';
+import { IGrid } from '../interfaces/IGrid';
+import { RawDataSource } from '../classes/RawDataSource';
+import { Utility } from '../classes/Utility';
+import { Grid } from '../classes/Grid';
+
 
 const props = defineProps({
   name: {
@@ -9,18 +16,12 @@ const props = defineProps({
   title: {
     type: String
   },
-  class: {
-    type: String
-  },
   dataSource: {
-    type: Object,
+    type: Object as PropType<IGridDataSource>,
     required: true
   },
-  mapResponse: {
-    type: Function
-  },
   columns: {
-    type: Array,
+    type: Array as PropType<IColumn[]>,
     required: true
   },
   pageSize: {
@@ -28,10 +29,14 @@ const props = defineProps({
   }
 })
 
+// refs
+const txtSearch = ref<HTMLInputElement | null>(null)
+const txtPageNumber = ref<HTMLInputElement | null>(null)
+
 // computed
 const totalRows = computed(() => grid.pager.value.total)
 const pageStart = computed(() => grid.pager.value.index)
-const selectedPage = computed(() => pages.value.find(p => p.selected))
+const selectedPage:ComputedRef<IPage | undefined> = computed(() => pages.value.find(p => p.selected))
 const firstPage = computed(() => pages.value[0])
 const lastPage = computed(() => pages.value.slice(-1)[0])
 const firstVisiblePage = computed(() => visiblePages.value[0])
@@ -44,7 +49,7 @@ const pageEnd = computed(() => {
   return end <= total ? end : total
 })
 
-const pages = computed(() => {
+const pages:ComputedRef<IPage[]> = computed(() => {
   return grid.pager.value.pages
 })
 
@@ -52,7 +57,7 @@ const visiblePages = computed(() => {
   if (pages.value.length <= 7) { return pages.value }
 
   const results = []
-  const { pageNumber } = selectedPage.value
+  const pageNumber = selectedPage.value?.pageNumber || 0
 
   const startIndex = pageNumber < 4
     ? 0
@@ -68,65 +73,72 @@ const visiblePages = computed(() => {
 })
 
 // object instantiation
-const grid = new Grid(
+const grid:IGrid = new Grid(
   props.dataSource,
   props.columns,
-  props.mapResponse,
   props.pageSize
 )
 
-watch(() => props.dataSource.data,
-  (newData) => {
-    console.log('watch triggered')
-    grid.loadRawData(newData)
-  })
-
-// formatters
-const formatTitle = (column) => {
-  const { title, field, columnType } = column
-  console.log(column)
-
-  if (!strIsNullOrWhitespace(title)) {
-    return title
-  } else if (
-    typeof (columnType) === 'string' &&
-    !strIsNullOrWhitespace(columnType) &&
-    columnType.toUpperCase() === 'COMMAND') {
-    return ''
-  } else if (!strIsNullOrWhitespace(field)) {
-    const s = field.replace(/([A-Z])/g, ' $1')
-    return s[0].toUpperCase() + s.slice(1)
-  } else return field
+if (props.dataSource instanceof RawDataSource) {
+  watch(() => props.dataSource, async() => await grid.getData(), { deep: true})
 }
 
-const applyCustomFormatting = (field, row, formatter) =>
-  formatter ? formatter(row[field], row) : row[field]
+// formatters
+const applyCustomFormatting = (
+  field:string, 
+  row:object, 
+  formatter?:(value:unknown, record:object) => unknown
+) => {
+  const value = row[field as keyof object]
+  return formatter ? formatter(value, row) : value
+}
+  
 
 // functions
-const strIsNullOrWhitespace = (value) => value === null || value === undefined || value.trim() === ''
-
-const gotoPageByPageNumber = async (pageNumber) => {
+const gotoPageByPageNumber = async (pageNumber:number) => {
   const page = pageNumber < 1
     ? pages.value[0]
     : pageNumber > pages.value.length
       ? pages.value.slice(-1)[0]
       : pages.value.find(p => p.pageNumber === Number(pageNumber))
 
-  await grid.gotoPage(page)
+  if (page) { 
+    await grid.gotoPage(page) 
+  }
 }
 
-const search = async (searchValue) => {
-  if (!searchValue || !isNaN(searchValue) || searchValue.length >= 3) {
-    await grid.filterData(searchValue)
+const search = async (searchValue?:string|number) => {
+  if (
+    searchValue !== undefined &&
+    (
+      (typeof searchValue === 'number' && !isNaN(searchValue)) ||
+      (!Utility.strIsNullOrWhitespace(searchValue as string))
+    )
+  ) { await grid.filterData(searchValue) }
+}
+
+const initialSortColumn = grid.columns.value.find((_:IColumn) => _.sortDirection)
+if (initialSortColumn) {
+  grid.sorter = {
+    field: initialSortColumn.field,
+    direction: initialSortColumn.sortDirection
   }
 }
 
 // load data on created
-grid.getData()
+onMounted(() => {
+  grid.getData()
+})
+</script>
+
+<script lang="ts">
+export default {
+  name: "VueGrid"
+}
 </script>
 
 <template>
-  <div :class="props.class">
+  <div>
     <table :id="props.name" class="grid">
       <thead>
         <!-- Title / Filter -->
@@ -138,12 +150,22 @@ grid.getData()
               </div>
 
               <div class="search">
-                <input type="text" ref="txtSearch" @keypress.enter="search(this.$refs.txtSearch.value)" />
-                <button @click="search(this.$refs.txtSearch.value)">Search</button>
-                <span class="link" @click="() => {
-                  this.$refs.txtSearch.value = null
+                <div>
+                  <input 
+                    type="text" 
+                    ref="txtSearch" 
+                    placeholder="Search..."
+                    @keypress.enter="search(txtSearch?.value)" />
+                </div>
+                <div>
+                  <button @click="search(($refs.txtSearch as HTMLInputElement).value)">
+                    <font-awesome-icon :icon="['fas', 'magnifying-glass']" />
+                  </button>
+                </div>
+                <div class="link" @click="() => {
+                  if (txtSearch) { txtSearch.value = '' }
                   search()
-                }">Clear</span>
+                }">Clear</div>
               </div>
             </div>
           </td>
@@ -158,10 +180,13 @@ grid.getData()
 
         <!-- Column headers -->
         <tr>
-          <th v-for="column in grid.columns.value" :key="column.index"
-            @click="grid.sort(column)"
-            :class="column.hidden ? 'hidden' : ''">
-            {{ formatTitle(column) }}
+          <th v-for="column in grid.columns.value" :key="column.field"
+            @click="async () => {
+              grid.sort(column)
+              await grid.getData()
+            }"
+            :v-show="!column.hidden">
+            {{ Grid.formatTitle(column) }}
             <span v-if="column.sortDirection === 'ASC'">&#x2191;</span>
             <span v-else-if="column.sortDirection === 'DESC'">&#x2193;</span>
           </th>
@@ -177,9 +202,9 @@ grid.getData()
 
       <!-- Table data -->
       <tbody v-show="!grid.loading.value">
-        <tr v-for="row in grid.data.value" :key="row.id">
+        <tr v-for="row, index in grid.data.value" :key="index">
           <td v-for="column in grid.columns.value" :key="column.field"
-            :class="column.hidden ? 'hidden' : ''">
+            :v-show="!column.hidden">
             <div v-if="$slots[column.field]">
               <slot :name="column.field" v-bind="row"></slot>
             </div>
@@ -201,9 +226,9 @@ grid.getData()
 
               <div>
                 <span v-if="selectedPage.pageNumber > 1"
-                  class="page-number arrow"
+                  class="page-number"
                   @click="grid.previousPage()">
-                  &#x2190;
+                  <font-awesome-icon :icon="['fas', 'chevron-left']" />
                 </span>
 
                 <span v-if="firstVisiblePage.pageNumber > 1"
@@ -231,17 +256,21 @@ grid.getData()
                 </span>
 
                 <span v-if="selectedPage.pageNumber < lastPage.pageNumber"
-                  class="page-number arrow"
+                  class="page-number"
                   @click="grid.nextPage()">
-                  &#x2192;
+                  <font-awesome-icon :icon="['fas', 'chevron-right']" />
                 </span>
               </div>
 
               <div>
                 Page:
                 <input ref="txtPageNumber" type="text" :value="selectedPage.pageNumber"
-                  @keyup.enter="gotoPageByPageNumber(this.$refs.txtPageNumber.value)" />
-                <span class="link" @click="gotoPageByPageNumber(this.$refs.txtPageNumber.value)">Go</span>
+                  @keyup.enter="gotoPageByPageNumber(+(txtPageNumber?.value || 0))" />
+                <span class="link" @click="gotoPageByPageNumber(+(txtPageNumber?.value || 0))">Go</span>
+
+                <button class="refreshButton" @click="grid.getData()">
+                  <font-awesome-icon :icon="['fas', 'rotate']" />
+                </button>
               </div>
             </div>
           </td>
@@ -251,15 +280,23 @@ grid.getData()
   </div>
 </template>
 
-<style lang="scss" scoped>
+<style scoped lang="scss">
+  $base-color: #eee;
+  $darker-color: darken($base-color, 20);
+  $very-dark-color: darken($base-color, 30);
+
+  input[type='text'] {
+    border: 1px solid #aaa;
+    height: 2rem;
+    margin: 0.5rem;
+    padding: 0.2rem 0.5rem;
+  }
+
   .link:hover {
     cursor: pointer;
   }
-  .hidden {
-    display: none;
-  }
   .loading {
-    background: url('./assets/loading.gif') no-repeat;
+    background: url('../assets/loading.gif') no-repeat;
     background-size: 100%;
   }
   table.grid {
@@ -287,7 +324,7 @@ grid.getData()
   }
 
   .title-container {
-    background-color: #eee;
+    background-color: $base-color;
     >div {
       display: flex;
       justify-content: space-between;
@@ -299,14 +336,36 @@ grid.getData()
     }
   }
 
+  .search {
+    display: grid;
+    grid-template-columns: auto auto auto;
+
+    div {
+      margin: auto;
+
+      input[type="text"] {
+        margin-right:0;
+      }
+
+      button {
+        border-radius: 0 0.4rem 0.4rem 0;
+        margin-left:0;
+        margin-right: .5rem;
+        background-color: $very-dark-color;
+        color: $base-color;
+      }
+    }
+  }
+
   .command-bar {
     text-align: left;
+    padding: 0 !important;
   }
 
   .pager {
     display: flex;
     justify-content: center;
-    background-color: #eee;
+    background-color: $base-color;
     .page-number {
       border:1px solid transparent;
       width: 2rem;
@@ -315,16 +374,13 @@ grid.getData()
       cursor: pointer;
     }
     .active {
-      background-color: #aaa;
+      background-color: $very-dark-color;
       color: #fff
     }
     .page-number:hover {
-      background-color: #ddd;
+      background-color: $darker-color;
     }
-    .arrow {
-      font-size: x-large;
-      line-height: 1.8rem;
-    }
+
     >div {
       display: flex;
       width: 33%;
@@ -343,6 +399,10 @@ grid.getData()
         text-align: center;
         margin: 0 0.5rem;
       }
+
+      .refreshButton {
+        margin-left:2rem;
+      }
     }
   }
-</style>
+</style>../vue-grid..
