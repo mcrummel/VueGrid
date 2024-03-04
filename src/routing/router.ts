@@ -1,7 +1,7 @@
 import HomeComponent from '../HomeComponent.vue'
-import demoRoutes from './demoRoutes.js'
+import demoRoutes from './demoRoutes'
 
-export const routes = [
+const routes = [
   {
     name: 'home',
     path: '/',
@@ -10,3 +10,5 @@ export const routes = [
   },
   ...demoRoutes
 ]
+
+export { routes }

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { routes } from './routing/router.js'
 
 const demoRoutes = routes.filter(_ => _.path.startsWith('/demos/'))
@@ -6,12 +6,17 @@ const demoRoutes = routes.filter(_ => _.path.startsWith('/demos/'))
 
 <template>
   <router-link :to="{ name: 'home' }">
-    <h1 id="appTitle">VueGrid Demos</h1>
+    <h1 id="appTitle">
+      VueGrid Demos
+    </h1>
   </router-link>
   <nav>
-    <span v-for="{ name, title } of demoRoutes" :key="name"
-      class="nav-link">
-        <router-link :to="{ name: name }">{{ title }}</router-link>
+    <span
+      v-for="{ name, title } of demoRoutes"
+      :key="name"
+      class="nav-link"
+    >
+      <router-link :to="{ name: name }">{{ title }}</router-link>
     </span>
   </nav>
   <main>

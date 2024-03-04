@@ -11,10 +11,12 @@ import { Grid } from '../classes/Grid';
 
 const props = defineProps({
   name: {
-    type: String
+    type: String,
+    default: ''
   },
   title: {
-    type: String
+    type: String,
+    default: null
   },
   dataSource: {
     type: Object as PropType<IGridDataSource>,
@@ -25,7 +27,8 @@ const props = defineProps({
     required: true
   },
   pageSize: {
-    type: Number
+    type: Number,
+    default: 10
   }
 })
 
@@ -139,11 +142,17 @@ export default {
 
 <template>
   <div>
-    <table :id="props.name" class="grid">
+    <table
+      :id="props.name"
+      class="grid"
+    >
       <thead>
         <!-- Title / Filter -->
         <tr v-if="props.title || props.columns.some(c => c.filterable)">
-          <td :colspan="grid.columns.value.length" class="title-container">
+          <td
+            :colspan="grid.columns.value.length"
+            class="title-container"
+          >
             <div>
               <div class="title">
                 <span>{{ props.title }}</span>
@@ -152,20 +161,26 @@ export default {
               <div class="search">
                 <div>
                   <input 
-                    type="text" 
                     ref="txtSearch" 
+                    type="text" 
                     placeholder="Search..."
-                    @keypress.enter="search(txtSearch?.value)" />
+                    @keypress.enter="search(txtSearch?.value)"
+                  >
                 </div>
                 <div>
                   <button @click="search(($refs.txtSearch as HTMLInputElement).value)">
                     <font-awesome-icon :icon="['fas', 'magnifying-glass']" />
                   </button>
                 </div>
-                <div class="link" @click="() => {
-                  if (txtSearch) { txtSearch.value = '' }
-                  search()
-                }">Clear</div>
+                <div
+                  class="link"
+                  @click="() => {
+                    if (txtSearch) { txtSearch.value = '' }
+                    search()
+                  }"
+                >
+                  Clear
+                </div>
               </div>
             </div>
           </td>
@@ -173,19 +188,28 @@ export default {
 
         <!-- Command bar -->
         <tr v-if="$slots['CommandBar']">
-          <td :colspan="grid.columns.value.length" class="command-bar">
-            <slot name="CommandBar" v-bind="grid" />
+          <td
+            :colspan="grid.columns.value.length"
+            class="command-bar"
+          >
+            <slot
+              name="CommandBar"
+              v-bind="grid"
+            />
           </td>
         </tr>
 
         <!-- Column headers -->
         <tr>
-          <th v-for="column in grid.columns.value" :key="column.field"
+          <th
+            v-for="column in grid.columns.value"
+            :key="column.field"
+            :v-show="!column.hidden"
             @click="async () => {
               grid.sort(column)
               await grid.getData()
             }"
-            :v-show="!column.hidden">
+          >
             {{ Grid.formatTitle(column) }}
             <span v-if="column.sortDirection === 'ASC'">&#x2191;</span>
             <span v-else-if="column.sortDirection === 'DESC'">&#x2193;</span>
@@ -196,17 +220,31 @@ export default {
       <!-- Loading -->
       <tbody v-show="grid.loading.value">
         <tr>
-          <td :colspan="grid.columns.value.length" class="loading">&nbsp;</td>
+          <td
+            :colspan="grid.columns.value.length"
+            class="loading"
+          >
+&nbsp;
+          </td>
         </tr>
       </tbody>
 
       <!-- Table data -->
       <tbody v-show="!grid.loading.value">
-        <tr v-for="row, index in grid.data.value" :key="index">
-          <td v-for="column in grid.columns.value" :key="column.field"
-            :v-show="!column.hidden">
+        <tr
+          v-for="row, index in grid.data.value"
+          :key="index"
+        >
+          <td
+            v-for="column in grid.columns.value"
+            :key="column.field"
+            :v-show="!column.hidden"
+          >
             <div v-if="$slots[column.field]">
-              <slot :name="column.field" v-bind="row"></slot>
+              <slot
+                :name="column.field"
+                v-bind="row"
+              />
             </div>
             <div v-else>
               {{ applyCustomFormatting(column.field, row, column.format) }}
@@ -225,50 +263,71 @@ export default {
               </div>
 
               <div>
-                <span v-if="selectedPage.pageNumber > 1"
+                <span
+                  v-if="selectedPage.pageNumber > 1"
                   class="page-number"
-                  @click="grid.previousPage()">
+                  @click="grid.previousPage()"
+                >
                   <font-awesome-icon :icon="['fas', 'chevron-left']" />
                 </span>
 
-                <span v-if="firstVisiblePage.pageNumber > 1"
+                <span
+                  v-if="firstVisiblePage.pageNumber > 1"
                   :class="['page-number']"
-                  @click="grid.gotoPage(firstPage)">
+                  @click="grid.gotoPage(firstPage)"
+                >
                   {{ firstPage.pageNumber }}
                 </span>
                 <span v-if="firstVisiblePage.pageNumber > 2">
                   ...
                 </span>
 
-                <span v-for="page in visiblePages" :key="page.pageNumber"
+                <span
+                  v-for="page in visiblePages"
+                  :key="page.pageNumber"
                   :class="['page-number', page.selected ? 'active' : '']"
-                  @click="grid.gotoPage(page)">
+                  @click="grid.gotoPage(page)"
+                >
                   {{ page.pageNumber }}
                 </span>
 
                 <span v-if="lastVisiblePage.pageNumber < pages.length - 1">
                   ...
                 </span>
-                <span v-if="lastVisiblePage.pageNumber < pages.length"
+                <span
+                  v-if="lastVisiblePage.pageNumber < pages.length"
                   :class="['page-number']"
-                  @click="grid.gotoPage(lastPage)">
+                  @click="grid.gotoPage(lastPage)"
+                >
                   {{ lastPage.pageNumber }}
                 </span>
 
-                <span v-if="selectedPage.pageNumber < lastPage.pageNumber"
+                <span
+                  v-if="selectedPage.pageNumber < lastPage.pageNumber"
                   class="page-number"
-                  @click="grid.nextPage()">
+                  @click="grid.nextPage()"
+                >
                   <font-awesome-icon :icon="['fas', 'chevron-right']" />
                 </span>
               </div>
 
               <div>
                 Page:
-                <input ref="txtPageNumber" type="text" :value="selectedPage.pageNumber"
-                  @keyup.enter="gotoPageByPageNumber(+(txtPageNumber?.value || 0))" />
-                <span class="link" @click="gotoPageByPageNumber(+(txtPageNumber?.value || 0))">Go</span>
+                <input
+                  ref="txtPageNumber"
+                  type="text"
+                  :value="selectedPage.pageNumber"
+                  @keyup.enter="gotoPageByPageNumber(+(txtPageNumber?.value || 0))"
+                >
+                <span
+                  class="link"
+                  @click="gotoPageByPageNumber(+(txtPageNumber?.value || 0))"
+                >Go</span>
 
-                <button class="refreshButton" @click="grid.getData()">
+                <button
+                  class="refreshButton"
+                  @click="grid.getData()"
+                >
                   <font-awesome-icon :icon="['fas', 'rotate']" />
                 </button>
               </div>

@@ -33,6 +33,7 @@ const router = createRouter({
   routes
 })
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 createApp(App)
   .use(router)
   .component('font-awesome-icon', FontAwesomeIcon)
