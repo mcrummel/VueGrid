@@ -9,7 +9,7 @@ const props = defineProps({
     required: true
   },
   data: { 
-    type: Array as PropType<object[]>,
+    type: Object,
     required: true
   }
 })
@@ -29,7 +29,7 @@ const inputs:IColumn[] = props.inputs.filter(_ => _.columnType !== 'command').ma
 const emit = defineEmits(['save', 'cancel', 'load'])
 const form = ref<object>({})
 
-const loadForm = (data: object[]) => {
+const loadForm = (data: object) => {
   if (Object.keys(data).length === 0) {
     form.value = {}
   } else {
@@ -89,42 +89,58 @@ loadForm(props.data)
 </script>
 
 <template>
-    <form @submit.prevent class="edit-record-form">
-        <div class="form-container">
-            <div v-for="input in inputs" :key="input.field" class="item">
-                <div class="form-item">
-                    <label :for="input.field">
-                        {{ Grid.formatTitle(input) }}
-                    </label>
+  <form
+    class="edit-record-form"
+    @submit.prevent
+  >
+    <div class="form-container">
+      <div
+        v-for="input in inputs"
+        :key="input.field"
+        class="item"
+      >
+        <div class="form-item">
+          <label :for="input.field">
+            {{ Grid.formatTitle(input) }}
+          </label>
 
-                    <div class="form-item-content">
-                        <span v-if="$slots[input.field]" >
-                            <slot :name="input.field"
-                                v-bind="{
-                                    value: form[input.field as keyof object],
-                                    updateValue: (value: unknown) => { 
-                                      (form[input.field as keyof object] as unknown) = value 
-                                    }
-                                }" />
-                        </span>
-                        <span v-else>
-                            <input :type="getEditorType(input)" v-model="form[input.field as keyof object]"
-                                :name="input.field"
-                                :readonly="input.readonly === true" />
-                        </span>
-                    </div>
+          <div class="form-item-content">
+            <span v-if="$slots[input.field]">
+              <slot
+                :name="input.field"
+                v-bind="{
+                  value: form[input.field as keyof object],
+                  updateValue: (value: unknown) => { 
+                    (form[input.field as keyof object] as unknown) = value 
+                  }
+                }"
+              />
+            </span>
+            <span v-else>
+              <input
+                v-model="form[input.field as keyof object]"
+                :type="getEditorType(input)"
+                :name="input.field"
+                :readonly="input.readonly === true"
+              >
+            </span>
+          </div>
 
-                    <div class="validation-error-message">
-                        {{ input.validator?.message(Grid.formatTitle(input) || '') }}
-                    </div>
-                </div>
-            </div>
+          <div class="validation-error-message">
+            {{ input.validator?.message(Grid.formatTitle(input) || '') }}
+          </div>
         </div>
-        <div class="form-buttons">
-            <button @click="saveRecord()">Save</button>
-            <button @click="$emit('cancel')">Cancel</button>
-        </div>
-    </form>
+      </div>
+    </div>
+    <div class="form-buttons">
+      <button @click="saveRecord()">
+        Save
+      </button>
+      <button @click="$emit('cancel')">
+        Cancel
+      </button>
+    </div>
+  </form>
 </template>
 
 <style lang="scss">
