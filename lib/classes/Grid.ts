@@ -97,7 +97,7 @@ class Grid implements IGrid {
     c.sortDirection = undefined
   })
 
-  filterData = async (searchValue: string | number) => {
+  filterData = async (searchValue: string | number | undefined) => {
     this._filters = []
     this.pager.value.index = 0
 

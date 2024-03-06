@@ -117,7 +117,11 @@ const search = async (searchValue?:string|number) => {
       (typeof searchValue === 'number' && !isNaN(searchValue)) ||
       (!Utility.strIsNullOrWhitespace(searchValue as string))
     )
-  ) { await grid.filterData(searchValue) }
+  ) { 
+    await grid.filterData(searchValue) 
+  } else {
+    await grid.filterData()
+  }
 }
 
 const initialSortColumn = grid.columns.value.find((_:IColumn) => _.sortDirection)
