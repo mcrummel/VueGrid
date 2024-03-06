@@ -13,7 +13,7 @@ interface IGrid {
     pager: Ref<IPager>,
     sort: (column:IColumn) => void,
     clearSorts: () => void,
-    filterData: (searchValue: string | number) => Promise<void>,
+    filterData: (searchValue?: string | number) => Promise<void>,
     getData: () => Promise<void>,
     loadData: (dataSet: IDataSet) => void,
     gotoPage: (page: IPage) => Promise<void>,
