@@ -14,13 +14,9 @@ class RawDataSource implements IGridDataSource {
     }
 
     public getData = async (
-        // @ts-expect-error: Required to comply with interface
         columns?: IColumn[], // eslint-disable-line @typescript-eslint/no-unused-vars -- required for interface
-        // @ts-expect-error: Required to comply with interface
         pager?: IPager, // eslint-disable-line @typescript-eslint/no-unused-vars -- required for interface
-        // @ts-expect-error: Required to comply with interface
         sorter?: ISorter, // eslint-disable-line @typescript-eslint/no-unused-vars -- required for interface
-        // @ts-expect-error: Required to comply with interface
         filters?: IFilter[] // eslint-disable-line @typescript-eslint/no-unused-vars -- required for interface
       ) => {
         return <IDataSet>{

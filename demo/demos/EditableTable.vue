@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { VueGrid, EditGrid, RawDataSource } from '../../lib/vue-grid'
+import { VueGrid, EditGrid, RawDataSource } from 'vue-grid'
 import StatesSelect from '../components/UsStateSelect.vue'
 import DateInput from '../components/DateInput.vue'
 import { ref, computed } from 'vue'

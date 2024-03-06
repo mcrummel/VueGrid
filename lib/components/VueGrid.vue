@@ -59,7 +59,7 @@ const pages:ComputedRef<IPage[]> = computed(() => {
 const visiblePages = computed(() => {
   if (pages.value.length <= 7) { return pages.value }
 
-  const results = []
+  const results: IPage[] = []
   const pageNumber = selectedPage.value?.pageNumber || 0
 
   const startIndex = pageNumber < 4
@@ -464,4 +464,4 @@ export default {
       }
     }
   }
-</style>../vue-grid..
+</style>../vue-grid..../interfaces/IGridDataSource../interfaces/IColumn../interfaces/IPager../interfaces/IGrid

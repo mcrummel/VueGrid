@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { type IDataSet } from '../../lib/interfaces/IDataSet'
-import { VueGrid, OdataDataSource } from '../../lib/vue-grid'
+import { type IDataSet } from 'vue-grid'
+import { VueGrid, OdataDataSource } from 'vue-grid'
 
 interface IWhosisResponse {
   value: object[]
@@ -76,3 +76,4 @@ const dataSource = new OdataDataSource('http://localhost:5173/api/WHOSIS_000001'
     ]"
   />
 </template>
+../../lib/interfaces/IDataSet

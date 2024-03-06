@@ -17,9 +17,7 @@ const props = defineProps({
 const inputs:IColumn[] = props.inputs.filter(_ => _.columnType !== 'command').map(input => {
   return {
     validator: {
-      // @ts-expect-error: Required to comply with interface
       assert: (value: unknown) => true, // eslint-disable-line @typescript-eslint/no-unused-vars
-      // @ts-expect-error: Required to comply with interface
       message: (title: string) => '' // eslint-disable-line @typescript-eslint/no-unused-vars
     },
     ...input
@@ -200,4 +198,4 @@ loadForm(props.data)
         }
     }
 </style>
-../classes/Grid
+../classes/Grid../interfaces/IColumn

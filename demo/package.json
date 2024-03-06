@@ -11,24 +11,6 @@
     "author": {
         "name": "Michael Crummel"
     },
-    "type": "module",
-    "files": [
-        "dist"
-    ],
-    "main": "./dist/vue-grid.umd.cjs",
-    "module": "./dist/vue-grid.js",
-    "exports": {
-        ".": {
-            "import": "./dist/vue-grid.js",
-            "require": "./dist/vue-grid.umd.cjs"
-        },
-        "./dist/style.css": "./dist/style.css",
-        "./dist/public/loading.gif": "./dist/public/loading.gif"
-    },
-    "types": "./dist/vue-grid.d.ts",
-    "engines": {
-        "node": ">=16.0.0"
-    },
     "scripts": {
         "lint": "eslint . --ignore-path .eslintignore --ext .js,.ts,.vue",
         "build": "vite build",
@@ -42,7 +24,8 @@
         "@fortawesome/free-regular-svg-icons": "^6.4.2",
         "@fortawesome/free-solid-svg-icons": "^6.4.2",
         "@fortawesome/vue-fontawesome": "^3.0.5",
-        "vue": "^3.3.9"
+        "vue": "^3.3.9",
+        "vue-grid": "file:../vue-grid-0.1.0.tgz"
     },
     "devDependencies": {
         "@typescript-eslint/eslint-plugin": "^6.14.0",
@@ -61,7 +44,8 @@
         "vite": "^4.4.5",
         "vite-dts": "^1.0.4",
         "vite-plugin-dts": "^3.7.3",
-        "vue": "^3.3.9"
+        "vue": "^3.3.9",
+        "vue-router": "^4.0.13"
     },
     "keywords": [
         "vue 3",

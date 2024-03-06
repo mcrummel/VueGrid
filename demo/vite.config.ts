@@ -2,32 +2,16 @@
 import { resolve } from 'path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import dts from 'vite-plugin-dts'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    vue(),
-    dts({
-      // outDir: 'dist',
-      copyDtsFiles: true,
-      // root: '.',
-      include: ['lib/**/*'],
-      exclude: ['node_modules', '*.config.ts', '*.d.ts', 'src/**'],
-      // entryRoot: __dirname
-    })
+    vue()
   ],
   build: {
     minify: true,
     reportCompressedSize: true,
     copyPublicDir: false,
-    lib: {
-      entry: resolve(__dirname, 'lib/vue-grid.ts'),
-      name: 'vue-grid',
-      // the proper extensions will be added
-      fileName: 'vue-grid',
-      formats: ['es', 'cjs', 'umd']
-    },
     rollupOptions: {
       // make sure to externalize deps that shouldn't be bundled
       // into your library

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { VueGrid, RawDataSource } from '../../lib/vue-grid'
+import { VueGrid, RawDataSource } from 'vue-grid'
 import { ref } from 'vue'
 
 const testData = ref([])

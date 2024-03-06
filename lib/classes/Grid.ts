@@ -220,7 +220,11 @@ class Grid implements IGrid {
 
   _getPages = (totalRecordsCount: number) => {
     this.pager.value.total = totalRecordsCount
-    const pages = []
+    const pages: Array<{
+      pageNumber: number,
+      start: number,
+      selected: boolean
+    }> = []
     const { pageSize, index, total } = this.pager.value
     let start = 0
     let pageNumber = 1
