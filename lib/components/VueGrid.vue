@@ -83,7 +83,7 @@ const grid:IGrid = new Grid(
 )
 
 if (props.dataSource instanceof RawDataSource) {
-  watch(() => props.dataSource, async() => await grid.getData(), { deep: true})
+  watch(() => props.dataSource, async() => await grid.filterData(), { deep: true})
 }
 
 // formatters
